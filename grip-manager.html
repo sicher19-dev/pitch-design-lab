@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS20 · Grip Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:#09090B; --panel:#111114; --card:#18181C; --border:#252528;
+      --border2:#2E2E33; --gold:#FFB612; --gold2:#E8A410; --white:#EFEFEF;
+      --muted:#666670; --muted2:#888892; --green:#4ADE80; --red:#F87171;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--black); color:var(--white); font-family:'Rajdhani',sans-serif; font-weight:500; }
+
+    header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 20px; background:var(--panel);
+      border-bottom:2px solid var(--gold); position:sticky; top:0; z-index:100;
+    }
+    .hdr-title { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:3px; color:var(--gold); }
+    .hdr-sub { font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-top:1px; }
+    .hdr-badge {
+      background:var(--card); border:1px solid var(--border2); border-radius:3px;
+      padding:6px 14px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted2);
+    }
+    .hdr-badge span { color:var(--gold); font-weight:600; }
+
+    .main { padding:16px; max-width:1400px; margin:0 auto; }
+
+    .instructions {
+      background:var(--panel); border:1px solid var(--border);
+      border-left:3px solid var(--gold); border-radius:3px;
+      padding:14px 16px; margin-bottom:16px;
+    }
+    .instructions h3 { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; color:var(--gold); margin-bottom:8px; }
+    .instructions ol { padding-left:20px; }
+    .instructions li { font-size:12px; color:var(--muted2); line-height:1.8; letter-spacing:.3px; }
+    .instructions li strong { color:var(--white); }
+    .instructions .note { font-size:10px; color:var(--muted); margin-top:8px; letter-spacing:.5px; }
+
+    .pitch-section { margin-bottom:24px; }
+    .pitch-header {
+      display:flex; align-items:center; gap:12px;
+      padding:8px 14px; background:var(--panel);
+      border:1px solid var(--border); border-radius:3px 3px 0 0;
+      border-bottom:2px solid var(--border2);
+    }
+    .pitch-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .pitch-label { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px; }
+    .pitch-count { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-left:auto; }
+
+    .pitcher-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+      gap:1px; background:var(--border);
+      border:1px solid var(--border); border-top:none; border-radius:0 0 3px 3px;
+      overflow:hidden;
+    }
+
+    .pitcher-slot {
+      background:var(--panel); padding:12px;
+      display:flex; flex-direction:column; gap:8px;
+      transition:background .15s;
+    }
+    .pitcher-slot:hover { background:var(--card); }
+    .pitcher-slot.filled { border-left:2px solid var(--green); }
+
+    .slot-name { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:.5px; color:var(--white); line-height:1; }
+    .slot-team { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+    .slot-filename {
+      font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--gold2);
+      background:var(--card); padding:3px 6px; border-radius:2px;
+      letter-spacing:.5px; word-break:break-all;
+    }
+
+    .preview-frame {
+      width:100%; height:80px; background:var(--card);
+      border:1px dashed var(--border2); border-radius:2px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; position:relative;
+    }
+    .preview-frame img {
+      width:100%; height:100%; object-fit:cover; display:none; position:absolute;
+    }
+    .preview-frame img.visible { display:block; }
+    .preview-placeholder {
+      font-size:8.5px; letter-spacing:1.5px; color:var(--border2); text-transform:uppercase;
+    }
+    .preview-check {
+      position:absolute; top:4px; right:4px;
+      background:var(--green); color:#000; border-radius:50%;
+      width:16px; height:16px; display:none; align-items:center; justify-content:center;
+      font-size:9px; font-weight:bold;
+    }
+    .preview-check.visible { display:flex; }
+
+    .slot-actions { display:flex; gap:6px; }
+    .btn-pick {
+      flex:1; font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px;
+      padding:5px 0; background:var(--card); color:var(--muted2);
+      border:1px solid var(--border2); border-radius:2px; cursor:pointer;
+      transition:all .15s; text-align:center;
+    }
+    .btn-pick:hover { border-color:var(--gold); color:var(--gold); }
+    .btn-download {
+      font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1px;
+      padding:5px 10px; background:var(--green); color:#000;
+      border:none; border-radius:2px; cursor:pointer;
+      transition:all .15s; display:none;
+    }
+    .btn-download.visible { display:block; }
+    .btn-download:hover { filter:brightness(1.1); }
+
+    .file-input { display:none; }
+
+    /* Skenes section */
+    .skenes-section {
+      background:linear-gradient(135deg, #111114, #1A1508);
+      border:1px solid var(--gold2); border-radius:3px; padding:16px; margin-bottom:24px;
+    }
+    .skenes-header {
+      font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+      color:var(--gold); margin-bottom:12px; display:flex; align-items:center; gap:10px;
+    }
+    .skenes-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:10px;
+    }
+    .skenes-slot {
+      background:var(--panel); border:1px solid var(--border2);
+      border-radius:3px; padding:10px;
+    }
+    .skenes-slot.filled { border-color:var(--green); }
+    .skenes-pitch-type {
+      font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px;
+      margin-bottom:2px;
+    }
+    .skenes-pitch-name { font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+
+    .video-slot {
+      width:100%; height:60px; background:var(--card);
+      border:1px dashed var(--border2); border-radius:2px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:8px; color:var(--border2); text-transform:uppercase; letter-spacing:1.5px;
+      margin-top:6px; overflow:hidden;
+    }
+    .video-slot video { width:100%; height:100%; object-fit:cover; display:none; }
+    .video-slot video.visible { display:block; }
+
+    /* Progress bar */
+    .progress-section {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:3px; padding:12px 16px; margin-bottom:16px;
+      display:flex; align-items:center; gap:16px;
+    }
+    .progress-label { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted2); flex-shrink:0; }
+    .progress-bar { flex:1; height:4px; background:var(--border2); border-radius:2px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--gold); border-radius:2px; transition:width .4s; }
+    .progress-num { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--gold); flex-shrink:0; }
+
+    footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; margin-top:24px; }
+    .ft-l { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:1.5px; }
+    .ft-r { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:3px; color:var(--gold2); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="hdr-title">PS20 · GRIP IMAGE MANAGER</div>
+    <div class="hdr-sub">Populate the grips/ folder · Rename & export ready-to-use images</div>
+  </div>
+  <div class="hdr-badge">
+    Progress: <span id="prog-count">0</span> / <span id="prog-total">0</span> slots filled
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="instructions">
+    <h3>How To Use This Tool</h3>
+    <ol>
+      <li>Open the <strong>Pitching Ninja Dropbox</strong> in another browser tab</li>
+      <li>Find a pitcher's grip image and save it to your Downloads folder</li>
+      <li>Come back here, click <strong>PICK IMAGE</strong> on the correct slot</li>
+      <li>Preview will load — then click <strong>SAVE</strong> to download it with the exact correct filename</li>
+      <li>Move all downloaded files into the <strong>grips/</strong> folder next to index.html</li>
+      <li>When done, open index.html — all images will auto-load in the pitch design tool</li>
+    </ol>
+    <div class="note">Also supports video files (.mp4 / .mov) for Paul's grip videos. For Paul's pitches, use the PAUL SKENES section below.</div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-section">
+    <span class="progress-label">OVERALL PROGRESS</span>
+    <div class="progress-bar"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+    <span class="progress-num" id="prog-pct">0%</span>
+  </div>
+
+  <!-- PAUL SKENES SECTION -->
+  <div class="skenes-section">
+    <div class="skenes-header">
+      <span>PAUL SKENES · GRIP ASSETS</span>
+      <span style="font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace;font-weight:normal;">Upload when ready · Image + Video supported</span>
+    </div>
+    <div class="skenes-grid" id="skenes-grid"></div>
+  </div>
+
+  <!-- COMP PITCHERS BY PITCH TYPE -->
+  <div id="comp-sections"></div>
+
+</div>
+
+<footer>
+  <div class="ft-l">DROP FILES INTO grips/ FOLDER AFTER DOWNLOADING · ALL NAMES AUTO-GENERATED</div>
+  <div class="ft-r">PS20 · PITCH DESIGN LAB · PRIVATE</div>
+</footer>
+
+<script>
+// ──────────────────────────────────────────────────────────────
+// DATA
+// ──────────────────────────────────────────────────────────────
+const ARSENAL_COLORS = {
+  FF:'#FFB612', SW:'#38BDF8', SP:'#C084FC', CH:'#34D399',
+  SI:'#F97316', SL:'#60A5FA', CU:'#A78BFA'
+};
+const ARSENAL_NAMES = {
+  FF:'Four-Seam Fastball', SW:'Sweeper', SP:'Splinker',
+  CH:'Changeup', SI:'Sinker', SL:'Slider', CU:'Curveball'
+};
+
+const SKENES_PITCHES = [
+  {type:'FF', name:'Four-Seam Fastball', hasVideo:true},
+  {type:'SW', name:'Sweeper',            hasVideo:true},
+  {type:'SP', name:'Splinker',           hasVideo:true},
+  {type:'CH', name:'Changeup',           hasVideo:true},
+  {type:'SI', name:'Sinker',             hasVideo:true},
+  {type:'SL', name:'Slider',             hasVideo:true},
+  {type:'CU', name:'Curveball',          hasVideo:true},
+];
+
+const COMP_PITCHERS = {
+  SP: [
+    {n:'Jhoan Duran',    t:'PHI'},
+    {n:'Logan Gilbert',  t:'SEA'},
+    {n:'Kodai Senga',    t:'NYM'},
+    {n:'Yu Darvish',     t:'SD'},
+    {n:'Shohei Ohtani',  t:'LAD'},
+    {n:'Gerrit Cole',    t:'NYY'},
+  ],
+  SW: [
+    {n:'Clay Holmes',      t:'NYY'},
+    {n:'Ryan Helsley',     t:'BAL'},
+    {n:'Blake Snell',      t:'LAD'},
+    {n:'Logan Gilbert',    t:'SEA'},
+    {n:'Shane McClanahan', t:'TB'},
+    {n:'Patrick Sandoval', t:'LAA'},
+    {n:'Robbie Ray',       t:'SF'},
+    {n:'Kodai Senga',      t:'NYM'},
+  ],
+  CH: [
+    {n:'Devin Williams',   t:'NYY'},
+    {n:'Sandy Alcantara',  t:'MIA'},
+    {n:'Luis Castillo',    t:'SEA'},
+    {n:'Pablo Lopez',      t:'MIN'},
+    {n:'Framber Valdez',   t:'HOU'},
+    {n:'Eury Perez',       t:'MIA'},
+    {n:'MacKenzie Gore',   t:'WSH'},
+  ],
+  SI: [
+    {n:'Framber Valdez',  t:'HOU'},
+    {n:'Zack Wheeler',    t:'PHI'},
+    {n:'Logan Webb',      t:'SF'},
+    {n:'Sandy Alcantara', t:'MIA'},
+    {n:'Yu Darvish',      t:'SD'},
+    {n:'Clarke Schmidt',  t:'NYY'},
+    {n:'Tyler Anderson',  t:'LAA'},
+  ],
+  SL: [
+    {n:'Corbin Burnes',  t:'BAL'},
+    {n:'Kevin Gausman',  t:'TOR'},
+    {n:'Max Fried',      t:'NYY'},
+    {n:'Logan Webb',     t:'SF'},
+    {n:'Dylan Cease',    t:'SD'},
+    {n:'Zack Wheeler',   t:'PHI'},
+    {n:'Nestor Cortes',  t:'NYY'},
+  ],
+  FF: [
+    {n:'Sandy Alcantara',  t:'MIA'},
+    {n:'Framber Valdez',   t:'HOU'},
+    {n:'Luis Castillo',    t:'SEA'},
+    {n:'Hunter Greene',    t:'CIN'},
+    {n:'Spencer Strider',  t:'ATL'},
+    {n:'Gerrit Cole',      t:'NYY'},
+    {n:'Freddy Peralta',   t:'MIL'},
+    {n:'Logan Gilbert',    t:'SEA'},
+    {n:'MacKenzie Gore',   t:'WSH'},
+    {n:'Tyler Glasnow',    t:'LAD'},
+  ],
+  CU: [
+    {n:'Zac Gallen',       t:'ARI'},
+    {n:'Tyler Glasnow',    t:'LAD'},
+    {n:'Framber Valdez',   t:'HOU'},
+    {n:'Nestor Cortes',    t:'NYY'},
+    {n:'Dinelson Lamet',   t:'COL'},
+    {n:'Tristan McKenzie', t:'CLE'},
+  ],
+};
+
+// ──────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/__+/g,'_').replace(/^_|_$/g,'');
+}
+
+function gripFilename(pitcher, pitchType) {
+  return `${slugify(pitcher)}_${pitchType.toLowerCase()}.jpg`;
+}
+
+function skenesFilename(pitchType, ext='jpg') {
+  return `skenes_${pitchType.toLowerCase()}.${ext}`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────
+let totalSlots = 0;
+let filledSlots = 0;
+
+function updateProgress() {
+  const pct = totalSlots ? Math.round(filledSlots/totalSlots*100) : 0;
+  document.getElementById('prog-count').textContent = filledSlots;
+  document.getElementById('prog-total').textContent = totalSlots;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+function markFilled(slotEl) {
+  if(!slotEl.classList.contains('filled')) {
+    slotEl.classList.add('filled');
+    filledSlots++;
+    updateProgress();
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// FILE PICKER → PREVIEW → DOWNLOAD
+// ──────────────────────────────────────────────────────────────
+function createFileInput(accept, onFile) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = accept;
+  inp.style.display = 'none';
+  inp.addEventListener('change', e => {
+    if(e.target.files[0]) onFile(e.target.files[0]);
+  });
+  document.body.appendChild(inp);
+  return inp;
+}
+
+function handleImageFile(file, imgEl, checkEl, dlBtn, filename, slotEl) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgEl.src = e.target.result;
+    imgEl.classList.add('visible');
+    checkEl.classList.add('visible');
+    dlBtn.classList.add('visible');
+    dlBtn.onclick = () => downloadDataURL(e.target.result, filename);
+    markFilled(slotEl);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleVideoFile(file, videoEl, dlBtn, filename, slotEl) {
+  const url = URL.createObjectURL(file);
+  videoEl.src = url;
+  videoEl.classList.add('visible');
+  dlBtn.classList.add('visible');
+  dlBtn.textContent = 'SAVE VIDEO';
+  dlBtn.onclick = () => {
+    const vidFilename = filename.replace('.jpg', '.mp4');
+    const a = document.createElement('a');
+    a.href = url; a.download = vidFilename; a.click();
+  };
+  markFilled(slotEl);
+}
+
+function downloadDataURL(dataURL, filename) {
+  // Convert to proper extension if needed
+  const ext = dataURL.split(';')[0].split('/')[1];
+  const fn = ext === 'jpeg' || ext === 'jpg'
+    ? filename
+    : filename.replace('.jpg', '.' + ext);
+  const a = document.createElement('a');
+  a.href = dataURL; a.download = fn; a.click();
+}
+
+// ──────────────────────────────────────────────────────────────
+// BUILD SKENES SECTION
+// ──────────────────────────────────────────────────────────────
+function buildSkenesSection() {
+  const grid = document.getElementById('skenes-grid');
+  SKENES_PITCHES.forEach(p => {
+    totalSlots += 2; // image + video
+    const col = ARSENAL_COLORS[p.type];
+    const imgFilename = skenesFilename(p.type, 'jpg');
+    const vidFilename = skenesFilename(p.type, 'mp4');
+
+    const slot = document.createElement('div');
+    slot.className = 'skenes-slot';
+
+    slot.innerHTML = `
+      <div class="skenes-pitch-type" style="color:${col}">${p.type}</div>
+      <div class="skenes-pitch-name">${p.name}</div>
+
+      <div class="slot-filename">${imgFilename}</div>
+      <div class="preview-frame" id="sk-img-frame-${p.type}">
+        <img id="sk-img-${p.type}">
+        <div class="preview-placeholder">GRIP IMAGE</div>
+        <div class="preview-check" id="sk-img-check-${p.type}">✓</div>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:4px;">
+        <button class="btn-pick" id="sk-img-pick-${p.type}" style="border-color:${col}40;color:${col}">PICK IMAGE</button>
+        <button class="btn-download" id="sk-img-dl-${p.type}">SAVE</button>
+      </div>
+
+      <div class="slot-filename" style="margin-top:8px;">${vidFilename}</div>
+      <div class="video-slot" id="sk-vid-frame-${p.type}">
+        <video id="sk-vid-${p.type}" autoplay muted loop playsinline></video>
+        <span>GRIP VIDEO</span>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:4px;">
+        <button class="btn-pick" id="sk-vid-pick-${p.type}" style="border-color:${col}40;color:${col}">PICK VIDEO</button>
+        <button class="btn-download" id="sk-vid-dl-${p.type}">SAVE</button>
+      </div>
+    `;
+    grid.appendChild(slot);
+
+    // Wire image picker
+    setTimeout(() => {
+      const imgPick = document.getElementById(`sk-img-pick-${p.type}`);
+      const imgEl   = document.getElementById(`sk-img-${p.type}`);
+      const imgCheck= document.getElementById(`sk-img-check-${p.type}`);
+      const imgDl   = document.getElementById(`sk-img-dl-${p.type}`);
+      const imgInp  = createFileInput('image/*', file => handleImageFile(file, imgEl, imgCheck, imgDl, imgFilename, slot));
+      imgPick.onclick = () => imgInp.click();
+
+      // Wire video picker
+      const vidPick  = document.getElementById(`sk-vid-pick-${p.type}`);
+      const vidEl    = document.getElementById(`sk-vid-${p.type}`);
+      const vidDl    = document.getElementById(`sk-vid-dl-${p.type}`);
+      const vidInp   = createFileInput('video/*', file => {
+        const spanEl = slot.querySelector(`#sk-vid-frame-${p.type} span`);
+        if(spanEl) spanEl.style.display = 'none';
+        handleVideoFile(file, vidEl, vidDl, imgFilename, slot);
+      });
+      vidPick.onclick = () => vidInp.click();
+    }, 0);
+  });
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────────────────────
+// BUILD COMP SECTIONS
+// ──────────────────────────────────────────────────────────────
+function buildCompSections() {
+  const container = document.getElementById('comp-sections');
+  const pitchOrder = ['SP','SW','CH','SI','SL','FF','CU'];
+
+  pitchOrder.forEach(pitchType => {
+    const pitchers = COMP_PITCHERS[pitchType] || [];
+    const col = ARSENAL_COLORS[pitchType];
+    totalSlots += pitchers.length;
+
+    const section = document.createElement('div');
+    section.className = 'pitch-section';
+
+    section.innerHTML = `
+      <div class="pitch-header">
+        <div class="pitch-dot" style="background:${col}"></div>
+        <span class="pitch-label" style="color:${col}">${pitchType} · ${ARSENAL_NAMES[pitchType]}</span>
+        <span class="pitch-count">${pitchers.length} PITCHERS</span>
+      </div>
+      <div class="pitcher-grid" id="grid-${pitchType}"></div>
+    `;
+    container.appendChild(section);
+
+    const grid = section.querySelector(`#grid-${pitchType}`);
+    pitchers.forEach(p => {
+      const filename = gripFilename(p.n, pitchType);
+      const slot = document.createElement('div');
+      slot.className = 'pitcher-slot';
+
+      slot.innerHTML = `
+        <div>
+          <div class="slot-name">${p.n}</div>
+          <div class="slot-team">${p.t} · ${pitchType}</div>
+        </div>
+        <div class="slot-filename">${filename}</div>
+        <div class="preview-frame">
+          <img class="slot-img">
+          <div class="preview-placeholder">NO IMAGE YET</div>
+          <div class="preview-check">✓</div>
+        </div>
+        <div class="slot-actions">
+          <button class="btn-pick" style="border-color:${col}30;color:${col}">PICK IMAGE</button>
+          <button class="btn-download">SAVE</button>
+        </div>
+      `;
+      grid.appendChild(slot);
+
+      const imgEl  = slot.querySelector('.slot-img');
+      const check  = slot.querySelector('.preview-check');
+      const dlBtn  = slot.querySelector('.btn-download');
+      const pick   = slot.querySelector('.btn-pick');
+      const phEl   = slot.querySelector('.preview-placeholder');
+      const inp    = createFileInput('image/*', file => {
+        handleImageFile(file, imgEl, check, dlBtn, filename, slot);
+        if(phEl) phEl.style.display = 'none';
+      });
+      pick.onclick = () => inp.click();
+    });
+  });
+  updateProgress();
+}
+
+// ──────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildSkenesSection();
+  buildCompSections();
+});
+</script>
+</body>
+</html>
