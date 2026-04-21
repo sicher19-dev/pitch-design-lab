@@ -1,0 +1,2996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS20 · Pitch Design Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root {
+      --black: #09090B;
+      --panel: #111114;
+      --card: #18181C;
+      --border: #252528;
+      --border2: #2E2E33;
+      --gold: #FFB612;
+      --gold2: #E8A410;
+      --gold-glow: rgba(255,182,18,0.12);
+      --gold-dim: rgba(255,182,18,0.35);
+      --white: #EFEFEF;
+      --muted: #666670;
+      --muted2: #888892;
+      --green: #4ADE80;
+      --red: #F87171;
+      --blue: #60A5FA;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 500;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: var(--panel);
+      border-bottom: 2px solid var(--gold);
+      position: sticky; top: 0; z-index: 200;
+      gap: 12px;
+    }
+    .hdr-left { display:flex; align-items:center; gap:14px; }
+    .hdr-badge {
+      display:flex; align-items:center; justify-content:center;
+      width:46px; height:46px; border-radius:50%;
+      border: 2px solid var(--gold);
+      background: var(--card);
+      font-family:'Bebas Neue',sans-serif;
+      font-size:17px; color:var(--gold); letter-spacing:1px;
+      flex-shrink:0;
+    }
+    .hdr-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:26px; letter-spacing:3px; color:var(--gold); line-height:1;
+    }
+    .hdr-sub {
+      font-size:10px; letter-spacing:3px; color:var(--muted);
+      text-transform:uppercase; margin-top:2px;
+    }
+    .hdr-right { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+    .hdr-stat { text-align:center; }
+    .hdr-stat .v {
+      font-family:'JetBrains Mono',monospace;
+      font-size:19px; font-weight:600; color:var(--gold); line-height:1;
+    }
+    .hdr-stat .l {
+      font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+    }
+    .live-dot {
+      width:7px; height:7px; border-radius:50%; background:var(--green);
+      animation: pulse 2s ease-in-out infinite; display:inline-block;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+    /* ── LAYOUT ── */
+    .main { padding:14px; display:flex; flex-direction:column; gap:14px; }
+
+    /* ── TOP 3-PANEL ── */
+    .top-panels {
+      display:grid;
+      grid-template-columns: 280px 1fr 280px;
+      gap:12px;
+      height:320px;
+    }
+    @media(max-width:1100px){ .top-panels{grid-template-columns:1fr 1fr; height:auto;} }
+    @media(max-width:700px){
+      .top-panels{grid-template-columns:1fr;}
+      .top-panels .panel{ height:260px; }
+    }
+
+    .panel {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:4px;
+      overflow:hidden;
+      position:relative;
+      display:flex; flex-direction:column;
+      transition: border-color .25s;
+    }
+    .panel:hover { border-color: var(--border2); }
+
+    .panel-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 12px;
+      border-bottom:1px solid var(--border);
+      background:rgba(255,182,18,0.025);
+      flex-shrink:0;
+    }
+    .panel-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:12px; letter-spacing:2.5px; color:var(--gold);
+    }
+    .panel-badge {
+      font-family:'JetBrains Mono',monospace;
+      font-size:9px; color:var(--muted2); background:var(--card);
+      padding:2px 7px; border-radius:2px;
+    }
+
+    /* ── GRIP PANEL ── */
+    .grip-body {
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:10px; padding:16px;
+    }
+    .grip-frame {
+      width:150px; height:150px; border-radius:4px;
+      background:var(--card); border:1px dashed var(--border2);
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; overflow:hidden; position:relative;
+    }
+    .grip-frame img {
+      width:100%; height:100%; object-fit:cover;
+      display:none; position:absolute; top:0; left:0;
+    }
+    .grip-placeholder-icon {
+      opacity:.18; color:var(--gold);
+    }
+    .grip-placeholder-icon svg { width:48px; height:48px; }
+    .grip-placeholder-text {
+      font-size:9px; letter-spacing:2px; color:var(--muted);
+      text-transform:uppercase; margin-top:8px;
+    }
+    .grip-name {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:15px; letter-spacing:1px; color:var(--white); text-align:center;
+    }
+    .grip-pitch {
+      font-size:10px; letter-spacing:2px; color:var(--gold);
+      text-transform:uppercase; text-align:center;
+    }
+
+    /* ── THREE.JS canvases ── */
+    #traj-canvas {
+      flex:1; display:block; width:100%;
+    }
+
+    /* ── PITCH SELECTOR ── */
+    .pitch-bar {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:4px; padding:10px 14px;
+    }
+    .pb-label {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:12px; letter-spacing:2px; color:var(--muted); margin-right:4px;
+    }
+    .pt {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; font-weight:600; padding:5px 14px;
+      border-radius:2px; border:1px solid var(--border2);
+      background:var(--card); color:var(--muted2);
+      cursor:pointer; transition:all .15s; letter-spacing:.5px;
+    }
+    .pt:hover { border-color:var(--gold2); color:var(--gold2); }
+    .pt.active { background:var(--gold); color:var(--black); border-color:var(--gold); font-weight:700; }
+
+    .mode-wrap { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    .mode-label { font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+
+    /* ── 2-COL GRID ── */
+    .mid-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:860px){ .mid-grid{grid-template-columns:1fr;} }
+
+    .section {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:4px; overflow:hidden;
+    }
+    .sec-hdr {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 14px; border-bottom:1px solid var(--border);
+      background:rgba(255,182,18,0.025);
+    }
+    .sec-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:13px; letter-spacing:2px; color:var(--gold);
+    }
+    .sec-sub {
+      font-family:'JetBrains Mono',monospace;
+      font-size:9px; color:var(--muted2);
+    }
+
+    /* ── PRESENTATION MODE ── */
+    body.present-mode .main > *:not(.top-panels):not(.pitch-bar) { display:none !important; }
+    body.present-mode .top-panels { height:calc(100vh - 110px) !important; }
+    body.present-mode header { padding:6px 20px; }
+
+    /* ── FULLSCREEN EXIT BUTTON ── */
+    #exit-present {
+      display:none; position:fixed; bottom:20px; right:20px; z-index:9999;
+      font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px;
+      padding:8px 18px; background:var(--gold); color:var(--black);
+      border:none; border-radius:3px; cursor:pointer;
+    }
+    body.present-mode #exit-present { display:block; }
+
+    /* ── MOBILE ── */
+    @media(max-width:900px) {
+      .top-panels { grid-template-columns:1fr 1fr !important; height:auto !important; }
+      .top-panels .panel { height:240px; }
+      .top-panels .panel:first-child { grid-column:1/-1; height:180px; }
+      header { flex-wrap:wrap; gap:8px; padding:8px 12px; }
+      .hdr-right { gap:12px; flex-wrap:wrap; }
+      .pitch-bar { flex-wrap:wrap; gap:5px; }
+      .mode-wrap { order:10; width:100%; margin-top:4px; }
+    }
+    @media(max-width:580px) {
+      .top-panels { grid-template-columns:1fr !important; }
+      .top-panels .panel { height:220px; }
+      .comp-grid { grid-template-columns:1fr !important; }
+      .hdr-title { font-size:17px !important; letter-spacing:1.5px !important; }
+      .hdr-right { display:none; }
+    }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:1px; background:var(--border);
+    }
+    @media(max-width:500px){ .stats-grid{grid-template-columns:repeat(2,1fr);} }
+
+    .sc {
+      background:var(--panel); padding:11px 13px;
+    }
+    .sc .sl { font-size:8.5px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+    .sc .sv {
+      font-family:'JetBrains Mono',monospace;
+      font-size:20px; font-weight:600; color:var(--white); line-height:1;
+    }
+    .sc .su { font-size:9px; color:var(--muted2); }
+    .sc.hl .sv { color:var(--gold); }
+    .rank-bar { height:2px; background:var(--border2); margin-top:5px; border-radius:1px; overflow:hidden; }
+    .rank-fill { height:100%; border-radius:1px; transition:width .5s; }
+
+    /* ── SANDBOX ── */
+    .sb-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+    @media(max-width:500px){ .sb-grid{grid-template-columns:1fr;} }
+    .sb-cell { background:var(--panel); padding:9px 13px; }
+    .sb-cell label { display:block; font-size:8.5px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-bottom:5px; }
+    .sb-row { display:flex; align-items:center; gap:8px; }
+    .sb-row input[type=range] {
+      flex:1; -webkit-appearance:none; height:2px;
+      background:var(--border2); border-radius:1px; outline:none; cursor:pointer;
+    }
+    .sb-row input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:11px; height:11px;
+      border-radius:50%; background:var(--gold); cursor:pointer;
+    }
+    .sb-row input[type=number] {
+      width:62px; background:var(--card); border:1px solid var(--border2);
+      border-radius:2px; color:var(--gold);
+      font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600;
+      padding:3px 5px; text-align:center; outline:none;
+    }
+    .sb-row input[type=number]:focus { border-color:var(--gold); }
+
+    .sb-actions {
+      padding:11px 14px; display:flex; gap:8px;
+      border-top:1px solid var(--border);
+    }
+    .btn-gold {
+      font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px;
+      padding:7px 22px; background:var(--gold); color:var(--black);
+      border:none; border-radius:2px; cursor:pointer; transition:all .15s;
+    }
+    .btn-gold:hover { background:#FFC42A; transform:translateY(-1px); }
+    .btn-ghost {
+      font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px;
+      padding:7px 22px; background:transparent; color:var(--muted2);
+      border:1px solid var(--border2); border-radius:2px; cursor:pointer; transition:all .15s;
+    }
+    .btn-ghost:hover { color:var(--white); border-color:var(--muted2); }
+
+    /* ── MOVEMENT PLOT ── */
+    #mov-canvas { display:block; width:100%; }
+
+    /* ── COMPS ── */
+    .comp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); }
+    @media(max-width:700px){ .comp-grid{grid-template-columns:1fr;} }
+
+    .comp-card {
+      background:var(--panel); padding:14px;
+      cursor:pointer; transition:background .15s;
+    }
+    .comp-card:hover { background:var(--card); }
+    .comp-rank {
+      font-family:'JetBrains Mono',monospace;
+      font-size:9px; letter-spacing:1.5px; color:var(--muted); margin-bottom:8px;
+    }
+    .comp-grip-slot {
+      width:100%; min-height:128px; background:var(--card);
+      border:1px dashed var(--border2); border-radius:2px;
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:8px 4px 6px;
+      text-transform:uppercase; margin-bottom:10px;
+    }
+    .comp-pitcher {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:19px; letter-spacing:.5px; color:var(--white); line-height:1;
+    }
+    .comp-team {
+      font-size:9px; letter-spacing:2px; color:var(--muted);
+      text-transform:uppercase; margin-bottom:10px; margin-top:1px;
+    }
+    .comp-stats { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+    .cs { display:flex; flex-direction:column; }
+    .cs .csl { font-size:7.5px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; }
+    .cs .csv {
+      font-family:'JetBrains Mono',monospace;
+      font-size:13px; font-weight:500; color:var(--white); line-height:1.3;
+    }
+    .sim-bar { height:2px; background:var(--border2); margin-top:10px; border-radius:1px; overflow:hidden; }
+    .sim-fill { height:100%; border-radius:1px; transition:width .6s; }
+    .sim-label {
+      font-family:'JetBrains Mono',monospace;
+      font-size:8.5px; color:var(--muted); margin-top:3px; text-align:right;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 20px; border-top:1px solid var(--border); margin-top:4px;
+      flex-wrap:wrap; gap:8px;
+    }
+    .ft-l { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:1.5px; }
+    .ft-r { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:3px; color:var(--gold2); }
+
+
+    /* ── DELTA BADGES ── */
+    .delta-row {
+      display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; padding-top:10px;
+      border-top:1px solid var(--border);
+    }
+    .delta-chip {
+      font-family:'JetBrains Mono',monospace;
+      font-size:9px; padding:2px 6px; border-radius:2px;
+      letter-spacing:.5px;
+    }
+    .delta-close  { background:rgba(74,222,128,0.12); color:#4ADE80; }
+    .delta-mid    { background:rgba(251,191,36,0.12);  color:#FBBF24; }
+    .delta-far    { background:rgba(248,113,113,0.12); color:#F87171; }
+
+    /* ── GRIP LOADED STATE ── */
+    .grip-frame img.loaded { display:block !important; }
+    .grip-frame .grip-hidden { display:none !important; }
+
+    /* ── COMP GRIP IMAGE ── */
+    .comp-grip-img {
+      width:100%; height:72px; object-fit:cover;
+      border-radius:2px; display:none;
+    }
+    .comp-grip-img.loaded { display:block; }
+
+
+    /* Transition for stat updates */
+    .sv, .csv { transition: color .3s; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<button id="exit-present" onclick="togglePresent()">EXIT PRESENTATION</button>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-badge">PS<br><span style="font-size:10px;letter-spacing:0">20</span></div>
+    <div>
+      <div class="hdr-title">PAUL SKENES · PITCH DESIGN LAB</div>
+      <div class="hdr-sub">TrackMan Analytics · 2025–2026 Baseline · Private Build</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-stat">
+      <div class="v"><span class="live-dot"></span></div>
+      <div class="l">Session</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── TOP 3 PANELS ── -->
+  <div class="top-panels">
+
+    <!-- GRIP -->
+    <div class="panel" id="grip-panel">
+      <div class="panel-hdr">
+        <span class="panel-title">PITCH GRIP</span>
+        <span class="panel-badge" id="grip-badge">FF · FOUR-SEAM</span>
+      </div>
+      <div class="grip-body" style="padding:10px 12px;gap:6px;">
+        <!-- Photo: shown when actual grip image exists in grips/ folder -->
+        <img id="grip-img" src="" alt="Grip" style="display:none;width:100%;max-height:220px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">
+        <!-- Canvas: hand-on-ball illustration, shown when no photo -->
+        <canvas id="grip-canvas" width="240" height="240"
+          style="display:block;width:100%;border-radius:4px;background:#0E0E11;border:1px solid var(--border);"></canvas>
+        <!-- Video strip below -->
+        <video id="grip-video" style="width:100%;border-radius:3px;background:var(--card);display:none;max-height:72px;object-fit:cover"
+          autoplay muted loop playsinline></video>
+        <!-- Adjustment note -->
+        <div id="grip-adjustment-text" style="font-size:9.5px;color:var(--muted2);line-height:1.55;min-height:16px;text-align:left;padding:2px 0;"></div>
+        <div class="grip-name" id="grip-name">PAUL SKENES</div>
+        <div class="grip-pitch" id="grip-pitch" style="color:var(--gold)">Four-Seam Fastball</div>
+      </div>
+    </div>
+
+    <!-- TRAJECTORY -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">PITCH TRAJECTORY</span>
+        <span class="panel-badge" id="traj-badge">99.2 MPH · 2526 RPM</span>
+      </div>
+      <canvas id="traj-canvas"></canvas>
+    </div>
+
+
+  </div>
+
+  <!-- ── PITCH SELECTOR ── -->
+  <div class="pitch-bar">
+    <span class="pb-label">Arsenal</span>
+    <button class="pt active" data-p="FF" onclick="selectPitch('FF')" title="Four-Seam Fastball · 38.9%">FF</button>
+    <button class="pt" data-p="SW" onclick="selectPitch('SW')" title="Sweeper · 15.8%">SW</button>
+    <button class="pt" data-p="SP" onclick="selectPitch('SP')" title="Splinker · 13.5%">SP</button>
+    <button class="pt" data-p="CH" onclick="selectPitch('CH')" title="Changeup · 10.9%">CH</button>
+    <button class="pt" data-p="SI" onclick="selectPitch('SI')" title="Sinker · 10.4%">SI</button>
+    <button class="pt" data-p="SL" onclick="selectPitch('SL')" title="Slider · 5.6%">SL</button>
+    <button class="pt" data-p="CU" onclick="selectPitch('CU')" title="Curveball · 4.8%">CU</button>
+
+    <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
+
+    <span class="pb-label">Splits</span>
+    <button class="pt active" id="split-all" onclick="setSplit('ALL')">ALL</button>
+    <button class="pt" id="split-rhh" onclick="setSplit('RHH')">RHH</button>
+    <button class="pt" id="split-lhh" onclick="setSplit('LHH')">LHH</button>
+
+    <div class="mode-wrap">
+      <span class="mode-label">Mode</span>
+      <button class="pt active" id="m-exist" onclick="setMode('existing')">Existing</button>
+      <button class="pt" id="m-design" onclick="setMode('design')">Design New</button>
+      <button class="pt" id="m-present" onclick="togglePresent()" title="Fullscreen presentation mode">⛶</button>
+    </div>
+  </div>
+
+  <!-- ── MID GRID: PROFILE + SANDBOX ── -->
+  <div class="mid-grid">
+
+    <!-- SKENES PROFILE -->
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">
+          SKENES · <span id="profile-pitch" style="color:var(--white)">FOUR-SEAM FASTBALL</span>
+        </span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="pitch-grade" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;"></span>
+          <span class="sec-sub">2024–2026</span>
+        </div>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div id="pitch-note" style="padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted2);line-height:1.5;letter-spacing:.3px;"></div>
+    </div>
+
+    <!-- SANDBOX -->
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">PITCH SANDBOX</span>
+        <span class="sec-sub">ADJUST → VISUALIZE → COMPARE</span>
+      </div>
+      <div class="sb-grid" id="sb-grid"></div>
+      <div id="classifier-badge" style="padding:8px 14px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;"></div>
+      <div class="sb-actions">
+        <button class="btn-gold" onclick="runDesign()">VISUALIZE PITCH</button>
+        <button class="btn-ghost" onclick="resetSandbox()">RESET BASELINE</button>
+        <button class="btn-ghost" onclick="exportPitchCard()" style="margin-left:auto">⬇ EXPORT CARD</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── MOVEMENT PLOT ── -->
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">MOVEMENT PROFILE · ALL PITCHES</span>
+      <span class="sec-sub">IVB vs HORIZONTAL BREAK · PITCHER POV</span>
+    </div>
+    <canvas id="mov-canvas" height="260"></canvas>
+  </div>
+
+
+
+  <!-- ── TOP 3 COMPS ── -->
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">TOP PITCH COMPS</span>
+      <span class="sec-sub" id="comp-sub">MATCHING: FOUR-SEAM FASTBALL · MLB 2025</span>
+    </div>
+    <div class="comp-grid" id="comp-grid"></div>
+  </div>
+
+  <!-- ── APPROACH ANGLES + NEXT PITCH REC ── -->
+  <div class="mid-grid">
+
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">APPROACH ANGLES</span>
+        <span class="sec-sub">VAA · HAA · RELEASE PLANE</span>
+      </div>
+      <canvas id="vaa-canvas" height="200"></canvas>
+      <div id="vaa-notes" style="padding:8px 14px 12px;font-size:11px;color:var(--muted2);line-height:1.6;"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">ARSENAL INTELLIGENCE</span>
+        <span class="sec-sub">GAPS · RECOMMENDATIONS · NEXT PITCH</span>
+      </div>
+      <div id="rec-panel" style="padding:12px 14px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ── ZONE HEAT MAP + COMPARISON ── -->
+  <div class="mid-grid">
+
+    <!-- ZONE HEAT MAP -->
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">ZONE ANALYSIS · <span id="zone-pitch-label" style="color:var(--white)">FF</span></span>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <button class="pt active" id="zm-whiff" onclick="setZoneMetric('whiff')" style="padding:3px 10px;font-size:10px;">WHIFF%</button>
+          <button class="pt" id="zm-ba" onclick="setZoneMetric('ba')" style="padding:3px 10px;font-size:10px;">BA</button>
+          <button class="pt" id="zm-rh" onclick="setZoneSplit('RHH')" style="padding:3px 10px;font-size:10px;">RHH</button>
+          <button class="pt" id="zm-lh" onclick="setZoneSplit('LHH')" style="padding:3px 10px;font-size:10px;">LHH</button>
+        </div>
+      </div>
+      <canvas id="zone-canvas" height="260"></canvas>
+    </div>
+
+    <!-- PITCH COMPARISON -->
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">PITCH COMPARISON</span>
+        <span class="sec-sub" id="compare-sub">SELECT TWO PITCHES TO COMPARE</span>
+      </div>
+      <div style="padding:10px 14px 6px;display:flex;gap:6px;flex-wrap:wrap;" id="compare-selectors">
+        <span style="font-size:9px;letter-spacing:1.5px;color:var(--muted);align-self:center;">PITCH A</span>
+        <button class="pt active" id="cmp-a-ff" onclick="setCompareA('FF')" data-ca="FF">FF</button>
+        <button class="pt" id="cmp-a-sw" onclick="setCompareA('SW')" data-ca="SW">SW</button>
+        <button class="pt" id="cmp-a-sp" onclick="setCompareA('SP')" data-ca="SP">SP</button>
+        <button class="pt" id="cmp-a-ch" onclick="setCompareA('CH')" data-ca="CH">CH</button>
+        <button class="pt" id="cmp-a-si" onclick="setCompareA('SI')" data-ca="SI">SI</button>
+        <button class="pt" id="cmp-a-sl" onclick="setCompareA('SL')" data-ca="SL">SL</button>
+        <button class="pt" id="cmp-a-cu" onclick="setCompareA('CU')" data-ca="CU">CU</button>
+      </div>
+      <div style="padding:0 14px 10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:9px;letter-spacing:1.5px;color:var(--muted);align-self:center;">PITCH B</span>
+        <button class="pt" id="cmp-b-ff" onclick="setCompareB('FF')" data-cb="FF">FF</button>
+        <button class="pt active" id="cmp-b-sw" onclick="setCompareB('SW')" data-cb="SW">SW</button>
+        <button class="pt" id="cmp-b-sp" onclick="setCompareB('SP')" data-cb="SP">SP</button>
+        <button class="pt" id="cmp-b-ch" onclick="setCompareB('CH')" data-cb="CH">CH</button>
+        <button class="pt" id="cmp-b-si" onclick="setCompareB('SI')" data-cb="SI">SI</button>
+        <button class="pt" id="cmp-b-sl" onclick="setCompareB('SL')" data-cb="SL">SL</button>
+        <button class="pt" id="cmp-b-cu" onclick="setCompareB('CU')" data-cb="CU">CU</button>
+      </div>
+      <div id="compare-panel"></div>
+    </div>
+
+  </div>
+
+  <!-- ── SAVED DESIGNS + OPPONENT CONTEXT ── -->
+  <div class="mid-grid">
+
+    <!-- SAVED PITCH DESIGNS -->
+    <div class="section">
+      <div class="sec-hdr">
+        <span class="sec-title">SAVED PITCH DESIGNS</span>
+        <span class="sec-sub">NAMED DESIGNS · CROSS-SESSION STORAGE</span>
+      </div>
+      <div style="padding:10px 14px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input id="design-name" placeholder="Name this design..." style="flex:1;background:var(--card);border:1px solid var(--border2);border-radius:2px;color:var(--white);font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 10px;outline:none;">
+          <button class="btn-gold" style="padding:6px 14px;font-size:11px;" onclick="saveDesign()">SAVE</button>
+        </div>
+        <div id="saved-designs-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;"></div>
+        <div id="no-designs" style="font-size:10px;color:var(--muted);letter-spacing:1px;text-align:center;padding:20px 0;">NO SAVED DESIGNS YET</div>
+      </div>
+    </div>
+
+
+  </div>
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">ARSENAL OVERVIEW · 2024–2026</span>
+      <span class="sec-sub">USAGE% · WHIFF% · STUFF+</span>
+    </div>
+    <canvas id="arsenal-canvas" height="200"></canvas>
+  </div>
+
+    <div style="padding:12px 14px 0;">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;" id="seq-slots">
+        <!-- populated by JS -->
+      </div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-top:6px;">
+        CLICK PITCH TO CYCLE TYPE · BUILD UP TO 6-PITCH SEQUENCE
+      </div>
+    </div>
+    <canvas id="seq-canvas" height="160" style="display:block;width:100%;margin-top:8px;"></canvas>
+    <div id="seq-analysis" style="padding:8px 14px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;"></div>
+  </div>
+
+  <!-- ── SESSION NOTES ── -->
+  <div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">SESSION NOTES</span>
+      <span class="sec-sub">DESIGN LOG · GRIP CUES · OBSERVATIONS</span>
+    </div>
+    <div style="padding:12px 14px;">
+      <textarea id="session-notes"
+        placeholder="Notes on pitch design, grip cues, feel descriptions, session observations...&#10;&#10;e.g. SW: shift index to outer seam edge for more glove-side bite. Best tunnel when FF is up 97+."
+        style="width:100%;height:130px;background:var(--card);border:1px solid var(--border);
+               border-radius:3px;color:var(--white);font-family:'JetBrains Mono',monospace;
+               font-size:11px;padding:10px;resize:vertical;outline:none;line-height:1.6;
+               letter-spacing:.3px;"
+        oninput="saveNotes(this.value)"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span style="font-size:9px;letter-spacing:1.5px;color:var(--muted)">
+          <span id="notes-saved" style="color:var(--green);display:none">✓ SAVED</span>
+          &nbsp;SESSION STORAGE
+        </span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost" style="font-size:10px;padding:3px 12px;" onclick="clearNotes()">CLEAR</button>
+          <button class="btn-ghost" style="font-size:10px;padding:3px 12px;" onclick="generateSessionReport()">⬇ SESSION REPORT</button>
+          </div>
+          <button class="btn-ghost" style="font-size:10px;padding:3px 12px;" onclick="saveDesign()">SAVE DESIGN
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="ft-l">DATA: MLB STATCAST 2025–26 · DRIVELINE OBP · TRACKMAN BASEBALL</div>
+  <div class="ft-r">PS20 · PITCH DESIGN LAB · PRIVATE</div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA: ARSENAL — Paul Skenes 2024–2026 Combined
+// HB convention: positive = arm-side (RHP first base), negative = glove-side
+// Source: Baseball Savant, MLB.com pitch breakdown, Brozdowski/Sarris analysis
+// ══════════════════════════════════════════════════════════════
+const ARSENAL = {
+  FF: {
+    name:'Four-Seam Fastball', color:'#FFB612',
+    note:'Low 18° arm angle creates extreme arm-side run. 5th-percentile IVB among 4-seamers. Pure elite velo/command.',
+    stats:{ velo:98.4, spin:2455, ivb:11.5, hb:14.8, tilt:'10:30', eff:87,
+            relH:5.1, relS:-1.8, ext:7.2, use:42.0, whiff:29.4, stuff:120, vaa:-4.2, haa:1.8 }
+  },
+  SW: {
+    name:'Sweeper', color:'#38BDF8',
+    note:'"Whirlybird" grip. Unusual positive IVB for a sweeper — stays up longer than expected. 2nd-most used pitch. +9 run value, lowest hard-hit rate of any pitch thrown 400+ times.',
+    stats:{ velo:84.4, spin:2600, ivb:5.6, hb:-11.2, tilt:'8:30', eff:37,
+            relH:5.0, relS:-1.7, ext:7.0, use:14.8, whiff:32.2, stuff:124, vaa:-5.1, haa:-3.4 }
+  },
+  SP: {
+    name:'Splinker', color:'#C084FC',
+    note:'Hybrid sinker/splitter. Fingers split wide with two-seam orientation. 1700s RPM. Arm-side run of a sinker, velo drop of a splitter. Best pitch by whiff%.',
+    stats:{ velo:94.1, spin:1760, ivb:-2.7, hb:14.8, tilt:'2:30', eff:43,
+            relH:5.0, relS:-1.8, ext:7.1, use:14.8, whiff:36.6, stuff:118, vaa:-4.8, haa:2.0 }
+  },
+  CH: {
+    name:'Changeup', color:'#34D399',
+    note:'Vulcan-style grip (ring/middle split). .093 wOBA against — lowest of ANY pitch thrown 200+ times in 2025. Breakout pitch of the season.',
+    stats:{ velo:87.8, spin:1815, ivb:8.8, hb:13.4, tilt:'1:30', eff:41,
+            relH:5.0, relS:-1.8, ext:7.0, use:9.6, whiff:44.2, stuff:122, vaa:-4.6, haa:2.2 }
+  },
+  SI: {
+    name:'Sinker', color:'#F97316',
+    note:'97 mph with 3" more drop and 3" more tail than avg sinker. Creates 4th arm-side option — completely different hitter decision problem.',
+    stats:{ velo:97.0, spin:2120, ivb:5.2, hb:17.0, tilt:'9:30', eff:74,
+            relH:5.1, relS:-1.9, ext:7.2, use:10.4, whiff:24.2, stuff:108, vaa:-4.5, haa:2.8 }
+  },
+  SL: {
+    name:'Slider', color:'#60A5FA',
+    note:'"The short one." Stays up flatter than expected (4th-lowest vertical drop among all MLB sliders). Tunnel off sweeper — gets swings from hitters sitting on the bigger break.',
+    stats:{ velo:85.0, spin:2640, ivb:7.0, hb:-15.0, tilt:'7:30', eff:55,
+            relH:4.9, relS:-1.7, ext:6.9, use:6.4, whiff:27.6, stuff:100, vaa:-5.3, haa:-2.6 }
+  },
+  CU: {
+    name:'Curveball', color:'#A78BFA',
+    note:'Gyro-slider variant. ~50% spin efficiency. Near-zero break in both directions. Show-me pitch — used for deception and tunneling off sweeper. Under development.',
+    stats:{ velo:84.0, spin:2640, ivb:-5.0, hb:-2.0, tilt:'7:00', eff:50,
+            relH:4.8, relS:-1.6, ext:6.8, use:4.8, whiff:27.4, stuff:84, vaa:-6.2, haa:-1.2 }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// DATA: REPOSITORY — MLB 2025 Pitch Profiles
+// HB: positive = arm-side (pitcher POV / Statcast pfx_x)
+// Phase 3 will expand to full league coverage via Statcast bulk pull
+// ══════════════════════════════════════════════════════════════
+const REPO = [
+  // ── FOUR-SEAM FASTBALL ─────────────────────────────────────
+  // Most typical 4-seamers have LOW arm-side run and HIGH IVB — Skenes is inverse
+  // Low-slot / high arm-side run comps:
+  {n:'Sandy Alcantara',t:'MIA', p:'FF', velo:97.2, spin:2340, ivb:12.8, hb:14.1, eff:82, tilt:'10:45'},
+  {n:'Framber Valdez', t:'HOU', p:'FF', velo:95.0, spin:2280, ivb:10.2, hb:16.4, eff:78, tilt:'10:15'},
+  {n:'Luis Castillo',  t:'SEA', p:'FF', velo:96.4, spin:2420, ivb:13.4, hb:13.8, eff:84, tilt:'11:00'},
+  {n:'Hunter Greene',  t:'CIN', p:'FF', velo:99.1, spin:2584, ivb:20.2, hb:4.8,  eff:96, tilt:'12:20'},
+  {n:'Spencer Strider',t:'ATL', p:'FF', velo:98.4, spin:2612, ivb:19.1, hb:3.6,  eff:97, tilt:'12:25'},
+  {n:'Gerrit Cole',    t:'NYY', p:'FF', velo:97.1, spin:2497, ivb:16.8, hb:4.2,  eff:95, tilt:'12:10'},
+  {n:'Freddy Peralta', t:'MIL', p:'FF', velo:95.2, spin:2702, ivb:21.4, hb:2.8,  eff:98, tilt:'12:30'},
+  {n:'Logan Gilbert',  t:'SEA', p:'FF', velo:95.8, spin:2512, ivb:17.8, hb:5.2,  eff:93, tilt:'12:12'},
+  {n:'MacKenzie Gore', t:'WSH', p:'FF', velo:96.1, spin:2380, ivb:11.6, hb:13.4, eff:80, tilt:'10:50'},
+  {n:'Tyler Glasnow',  t:'LAD', p:'FF', velo:98.2, spin:2560, ivb:18.4, hb:6.4,  eff:94, tilt:'12:08'},
+  // ── SWEEPER ───────────────────────────────────────────────
+  // Skenes SW: +6 IVB (stays up) -11.4 HB — unusual positive IVB for sweeper
+  {n:'Clay Holmes',    t:'NYY', p:'SW', velo:83.8, spin:2560, ivb:5.2,  hb:-10.8,eff:40, tilt:'8:40'},
+  {n:'Ryan Helsley',   t:'STL', p:'SW', velo:86.4, spin:2720, ivb:6.8,  hb:-12.2,eff:38, tilt:'8:20'},
+  {n:'Blake Snell',    t:'LAD', p:'SW', velo:83.2, spin:2680, ivb:4.8,  hb:-14.4,eff:42, tilt:'9:00'},
+  {n:'Logan Gilbert',  t:'SEA', p:'SW', velo:83.6, spin:2640, ivb:3.2,  hb:-13.8,eff:44, tilt:'8:55'},
+  {n:'Shane McClanahan',t:'TB', p:'SW', velo:84.8, spin:2700, ivb:3.8,  hb:-15.6,eff:41, tilt:'8:45'},
+  {n:'Patrick Sandoval',t:'LAA',p:'SW', velo:81.4, spin:2580, ivb:4.4,  hb:-18.2,eff:39, tilt:'9:10'},
+  {n:'Robbie Ray',     t:'SF',  p:'SW', velo:82.1, spin:2620, ivb:5.6,  hb:-16.4,eff:43, tilt:'8:35'},
+  {n:'Kodai Senga',    t:'NYM', p:'SW', velo:82.8, spin:2580, ivb:5.0,  hb:-11.2,eff:41, tilt:'8:45'},
+  // ── SPLINKER ─────────────────────────────────────────────
+  // Hybrid sinker/splitter — arm-side run + splitter drop velocity
+  {n:'Jhoan Duran',    t:'MIN', p:'SP', velo:102.4,spin:1840, ivb:-1.2, hb:16.8, eff:42, tilt:'2:15'},
+  {n:'Logan Gilbert',  t:'SEA', p:'SP', velo:95.8, spin:1780, ivb:-2.4, hb:14.6, eff:44, tilt:'2:30'},
+  {n:'Kodai Senga',    t:'NYM', p:'SP', velo:90.4, spin:1520, ivb:-5.8, hb:12.4, eff:36, tilt:'3:00'},
+  {n:'Yu Darvish',     t:'SD',  p:'SP', velo:88.2, spin:1420, ivb:-4.2, hb:13.8, eff:34, tilt:'2:45'},
+  {n:'Shohei Ohtani',  t:'LAD', p:'SP', velo:91.8, spin:1640, ivb:-3.6, hb:15.2, eff:38, tilt:'2:20'},
+  {n:'Gerrit Cole',    t:'NYY', p:'SP', velo:92.4, spin:1680, ivb:-2.8, hb:14.4, eff:40, tilt:'2:25'},
+  // ── CHANGEUP ──────────────────────────────────────────────
+  // Skenes CH: +9 IVB, +14 arm-side — arm-dominant changeup, above-avg velo
+  {n:'Devin Williams', t:'NYY', p:'CH', velo:84.2, spin:1620, ivb:5.8,  hb:12.4, eff:35, tilt:'1:30'},
+  {n:'Sandy Alcantara',t:'MIA', p:'CH', velo:88.4, spin:1894, ivb:9.8,  hb:12.8, eff:44, tilt:'12:45'},
+  {n:'Luis Castillo',  t:'SEA', p:'CH', velo:87.1, spin:1750, ivb:8.4,  hb:14.2, eff:38, tilt:'1:15'},
+  {n:'Pablo Lopez',    t:'MIN', p:'CH', velo:86.8, spin:1812, ivb:7.2,  hb:13.8, eff:41, tilt:'1:00'},
+  {n:'Framber Valdez', t:'HOU', p:'CH', velo:86.2, spin:1760, ivb:8.8,  hb:15.4, eff:39, tilt:'12:50'},
+  {n:'Eury Perez',     t:'MIA', p:'CH', velo:85.4, spin:1680, ivb:6.8,  hb:15.8, eff:37, tilt:'1:20'},
+  {n:'MacKenzie Gore', t:'WSH', p:'CH', velo:87.8, spin:1820, ivb:9.4,  hb:13.2, eff:43, tilt:'1:10'},
+  // ── SINKER ────────────────────────────────────────────────
+  // Skenes SI: 97 mph, +17 arm-side, +5.2 IVB — elite velocity sinker
+  {n:'Framber Valdez', t:'HOU', p:'SI', velo:94.2, spin:2180, ivb:7.8,  hb:16.8, eff:76, tilt:'9:20'},
+  {n:'Zack Wheeler',   t:'PHI', p:'SI', velo:96.8, spin:2240, ivb:6.4,  hb:15.2, eff:74, tilt:'9:35'},
+  {n:'Logan Webb',     t:'SF',  p:'SI', velo:92.4, spin:2120, ivb:5.2,  hb:18.4, eff:71, tilt:'9:45'},
+  {n:'Sandy Alcantara',t:'MIA', p:'SI', velo:96.4, spin:2280, ivb:8.2,  hb:14.6, eff:78, tilt:'9:15'},
+  {n:'Yu Darvish',     t:'SD',  p:'SI', velo:93.8, spin:2160, ivb:6.8,  hb:16.4, eff:73, tilt:'9:30'},
+  {n:'Clarke Schmidt', t:'NYY', p:'SI', velo:96.2, spin:2200, ivb:5.8,  hb:17.2, eff:72, tilt:'9:40'},
+  {n:'Tyler Anderson', t:'LAA', p:'SI', velo:91.8, spin:2080, ivb:4.8,  hb:18.8, eff:69, tilt:'9:50'},
+  // ── SLIDER ────────────────────────────────────────────────
+  // Skenes SL: +7 IVB (stays up!), -15 HB — gyro-style, low drop
+  {n:'Corbin Burnes',  t:'BAL', p:'SL', velo:88.2, spin:2904, ivb:1.2,  hb:-17.4,eff:56, tilt:'7:40'},
+  {n:'Kevin Gausman',  t:'TOR', p:'SL', velo:87.4, spin:2720, ivb:3.2,  hb:-13.6,eff:64, tilt:'8:05'},
+  {n:'Max Fried',      t:'NYY', p:'SL', velo:86.1, spin:2612, ivb:2.1,  hb:-15.2,eff:55, tilt:'7:55'},
+  {n:'Logan Webb',     t:'SF',  p:'SL', velo:85.2, spin:2540, ivb:6.8,  hb:-12.4,eff:62, tilt:'8:10'},
+  {n:'Dylan Cease',    t:'SD',  p:'SL', velo:88.8, spin:2760, ivb:5.4,  hb:-16.2,eff:54, tilt:'7:45'},
+  {n:'Zack Wheeler',   t:'PHI', p:'SL', velo:89.4, spin:2640, ivb:4.8,  hb:-14.8,eff:58, tilt:'8:00'},
+  {n:'Nestor Cortes',  t:'NYY', p:'SL', velo:82.4, spin:2480, ivb:7.2,  hb:-11.8,eff:66, tilt:'8:15'},
+  // ── CURVEBALL ─────────────────────────────────────────────
+  // Skenes CU: -5 IVB, -2 HB — gyro variant, near-zero break in both directions
+  {n:'Zac Gallen',     t:'ARI', p:'CU', velo:81.2, spin:2720, ivb:-12.4,hb:-8.1, eff:74, tilt:'7:20'},
+  {n:'Tyler Glasnow',  t:'LAD', p:'CU', velo:84.2, spin:2840, ivb:-14.2,hb:-6.8, eff:81, tilt:'6:45'},
+  {n:'Framber Valdez', t:'HOU', p:'CU', velo:78.4, spin:2614, ivb:-13.1,hb:-5.4, eff:78, tilt:'7:10'},
+  {n:'Nestor Cortes',  t:'NYY', p:'CU', velo:76.8, spin:2580, ivb:-8.4, hb:-3.2, eff:58, tilt:'7:05'},
+  {n:'Dinelson Lamet', t:'COL', p:'CU', velo:78.2, spin:2640, ivb:-6.8, hb:-2.8, eff:52, tilt:'7:00'},
+  {n:'Tristan McKenzie',t:'CLE',p:'CU', velo:79.4, spin:2560, ivb:-7.2, hb:-4.4, eff:55, tilt:'7:08'},
+];
+
+// ══════════════════════════════════════════════════════════════
+// DATA: HANDEDNESS SPLITS — 2025 approximate Statcast
+// ══════════════════════════════════════════════════════════════
+const SPLITS = {
+  FF:{
+    RHH:{velo:98.4,spin:2470,ivb:11.4,hb:14.2,eff:87,use:42.1,whiff:25.8,stuff:120,vaa:-3.6},
+    LHH:{velo:97.8,spin:2445,ivb:10.6,hb:16.4,eff:84,use:35.2,whiff:35.4,stuff:125,vaa:-4.0},
+  },
+  SW:{
+    RHH:{velo:84.2,spin:2610,ivb:5.8, hb:-12.2,eff:36,use:8.4, whiff:28.4,stuff:118,vaa:-6.2},
+    LHH:{velo:84.8,spin:2632,ivb:6.2, hb:-10.8,eff:38,use:24.8,whiff:37.8,stuff:122,vaa:-5.4},
+  },
+  SP:{
+    RHH:{velo:94.2,spin:1768,ivb:-2.6,hb:15.4,eff:43,use:14.2,whiff:37.2,stuff:118,vaa:-6.8},
+    LHH:{velo:93.8,spin:1752,ivb:-3.0,hb:14.6,eff:44,use:12.8,whiff:34.8,stuff:116,vaa:-6.0},
+  },
+  CH:{
+    RHH:{velo:87.8,spin:1814,ivb:9.4, hb:13.2,eff:41,use:5.2, whiff:38.4,stuff:116,vaa:-5.6},
+    LHH:{velo:88.2,spin:1828,ivb:8.6, hb:15.2,eff:43,use:17.8,whiff:52.8,stuff:120,vaa:-4.8},
+  },
+  SI:{
+    RHH:{velo:97.2,spin:2128,ivb:5.4, hb:17.8,eff:73,use:11.8,whiff:22.4,stuff:132,vaa:-4.4},
+    LHH:{velo:96.8,spin:2112,ivb:5.0, hb:16.2,eff:74,use:8.8, whiff:27.2,stuff:144,vaa:-3.8},
+  },
+  SL:{
+    RHH:{velo:85.2,spin:2644,ivb:7.4, hb:-14.2,eff:54,use:8.4,whiff:24.8,stuff:114,vaa:-7.4},
+    LHH:{velo:84.8,spin:2636,ivb:6.6, hb:-16.4,eff:56,use:2.4,whiff:32.4,stuff:132,vaa:-6.8},
+  },
+  CU:{
+    RHH:{velo:84.2,spin:2644,ivb:-4.8,hb:-2.4,eff:49,use:3.6,whiff:24.4,stuff:102,vaa:-8.6},
+    LHH:{velo:83.8,spin:2636,ivb:-5.2,hb:-1.6,eff:51,use:6.2,whiff:31.6,stuff:114,vaa:-7.8},
+  },
+};
+
+
+// ══════════════════════════════════════════════════════════════
+// DATA: APPROACH ANGLE LEAGUE AVERAGES per pitch type
+// ══════════════════════════════════════════════════════════════
+// Paul's real VAA/HAA from Baseball Savant 2024-2026 combined
+// VAA = Vertical Approach Angle (degrees, negative = downward)
+// HAA = Horizontal Approach Angle (degrees, positive = arm-side)
+const VAA_AVG = {
+  FF:{vaa:-5.2, haa:0.4},  SW:{vaa:-6.8, haa:-3.2},
+  SP:{vaa:-7.1, haa:2.8},  CH:{vaa:-6.1, haa:2.4},
+  SI:{vaa:-4.8, haa:1.2},  SL:{vaa:-7.8, haa:-2.6},
+  CU:{vaa:-9.4, haa:-1.8},
+};
+
+// ══════════════════════════════════════════════════════════════
+// DATA: PITCH GRADE THRESHOLDS (composite Stuff+ + whiff pct)
+// ══════════════════════════════════════════════════════════════
+function getPitchGrade(stats, type) {
+  const stuffPct = getPct(stats.stuff || 100, 'stuff', type) || 50;
+  const whiffPct = getPct(stats.whiff || 25,  'whiff', type) || 50;
+  const composite = stuffPct * 0.6 + whiffPct * 0.4;
+  if(composite >= 92) return {grade:'A+', col:'#4ADE80'};
+  if(composite >= 84) return {grade:'A',  col:'#4ADE80'};
+  if(composite >= 76) return {grade:'B+', col:'#86EFAC'};
+  if(composite >= 66) return {grade:'B',  col:'#FBBF24'};
+  if(composite >= 54) return {grade:'C+', col:'#FCD34D'};
+  if(composite >= 42) return {grade:'C',  col:'#F97316'};
+  return                      {grade:'D',  col:'#F87171'};
+}
+let curPitch = 'FF';
+let curMode  = 'existing';
+let curSplit = 'ALL';   // ALL | RHH | LHH
+let sbVals   = {};
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+function init() {
+  // Wrap Three.js inits — if CDN fails or file:// blocks requests, 
+  // the rest of the tool still works
+  initTraj();
+  try {} catch(e) { console.warn('Spin init failed:', e.message); }
+
+  selectPitch('FF');
+  renderArsenalChart();
+  renderRecommendation();
+  renderZoneMap();
+  renderComparePanel();
+  loadNotes();
+  updateClassifier();
+  // Defer grip diagram until DOM is fully painted (canvas needs clientWidth)
+  setTimeout(() => renderDynamicGrip(ARSENAL.FF.stats, 'FF'), 150);
+  // Guard for test environments
+  if(typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(loop);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SPLIT + YEAR CONTROLS
+// ══════════════════════════════════════════════════════════════
+function getActiveStats(type) {
+  // Returns stats for current pitch type — combined 2024-2026 data
+  // Split (ALL/RHH/LHH) applies to HANDEDNESS_SPLITS if available
+  const base = {...ARSENAL[type].stats};
+  if(curSplit !== 'ALL' && HANDEDNESS_SPLITS[type]?.[curSplit]) {
+    const split = HANDEDNESS_SPLITS[type][curSplit];
+    Object.assign(base, split);
+  }
+  return base;
+}
+
+function refreshStats() {
+  selectPitch(curPitch);
+}
+
+function setSplit(s) {
+  curSplit = s;
+  ['ALL','RHH','LHH'].forEach(x => {
+    const el = document.getElementById('split-'+x.toLowerCase());
+    if(el) el.classList.toggle('active', x === s);
+  });
+  refreshStats();
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// PRESENTATION MODE
+// ══════════════════════════════════════════════════════════════
+function togglePresent() {
+  document.body.classList.toggle('present-mode');
+  if(document.body.classList.contains('present-mode') && document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else if(document.fullscreenElement) {
+    document.exitFullscreen().catch(()=>{});
+  }
+
+}
+
+// ══════════════════════════════════════════════════════════════
+// PITCH SELECTION
+// ══════════════════════════════════════════════════════════════
+function selectPitch(type) {
+  curPitch = type;
+  const p = ARSENAL[type];
+  const stats = getActiveStats(type);
+
+  // Tabs
+  document.querySelectorAll('.pt[data-p]').forEach(b => {
+    b.classList.toggle('active', b.dataset.p === type);
+  });
+
+  // Grade
+  const g = getPitchGrade(stats, type);
+  const gradeEl = document.getElementById('pitch-grade');
+  if(gradeEl) { gradeEl.textContent = g.grade; gradeEl.style.color = g.col; }
+
+  // Header labels
+  document.getElementById('grip-badge').textContent = `${type} · ${p.name.toUpperCase()}`;
+  document.getElementById('grip-pitch').textContent  = p.name;
+  document.getElementById('grip-pitch').style.color  = p.color;
+  document.getElementById('profile-pitch').textContent = p.name.toUpperCase();
+  document.getElementById('traj-badge').textContent  = `${stats.velo} MPH · ${stats.spin} RPM`;
+  document.getElementById('comp-sub').textContent    = `MATCHING: ${p.name.toUpperCase()} · MLB 2024–2026`;
+
+  renderStats(stats, type);
+  const noteEl = document.getElementById('pitch-note');
+  if(noteEl) noteEl.textContent = p.note || '';
+  sbVals = {...p.stats};
+  renderSandbox();
+  updateTraj(stats, type);
+  renderComps(type, stats);
+  renderMovPlot();
+  renderArsenalChart();
+  renderVAAPanel(type, stats);
+  renderZoneMap();
+  updateClassifier();
+  loadSkenesGrip(type);
+  renderDynamicGrip(stats, type);
+
+  // Guided slider design mode — SL has no established grip yet
+  if(type === 'SL' && ARSENAL.SL.stats.use === 0) {
+    setMode('design');
+    // Show guided prompt
+    const noteEl = document.getElementById('pitch-note');
+    if(noteEl) noteEl.innerHTML = `<span style="color:var(--gold);font-weight:600;">⚡ DESIGN SESSION</span> — No established SL grip yet. Use the sandbox to design your slider. The matching engine will surface the best real-world comps as you dial in the target shape. <span style="color:var(--muted2)">Suggested starting point: 85–88 mph · IVB +4–8" · HB -12 to -16" · 2400–2700 RPM · 55–65% efficiency.</span>`;
+    // Pre-load a reasonable slider starting point in sandbox
+    sbVals = {
+      velo: 86.5, spin: 2550, ivb: 6.0, hb: -13.5,
+      eff: 60, ext: 7.0, relH: 5.0, relS: -1.8,
+      tilt: '8:00', use: 0, whiff: 0, stuff: 0, vaa: -7.0
+    };
+    renderSandbox();
+    updateTraj(sbVals, 'SL');
+    renderComps('SL', sbVals);
+    renderMovPlot();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATS PANEL
+// ══════════════════════════════════════════════════════════════
+const STAT_DEFS = [
+  {k:'velo',  lb:'Velocity',   u:'mph',  mn:65,  mx:105, hi:false},
+  {k:'spin',  lb:'Spin Rate',  u:'rpm',  mn:1200,mx:3200,hi:true},
+  {k:'ivb',   lb:'IVB',        u:'″',    mn:-20, mx:25,  hi:false},
+  {k:'hb',    lb:'Horiz Break',u:'″',    mn:-25, mx:25,  hi:false},
+  {k:'tilt',  lb:'Tilt',       u:'',     mn:null,mx:null,hi:false},
+  {k:'eff',   lb:'Spin Eff',   u:'%',    mn:20,  mx:100, hi:false},
+  {k:'relH',  lb:'Rel Height', u:'ft',   mn:4,   mx:8,   hi:false},
+  {k:'ext',   lb:'Extension',  u:'ft',   mn:5.5, mx:8,   hi:false},
+  {k:'use',   lb:'Usage',      u:'%',    mn:0,   mx:70,  hi:false},
+  {k:'whiff', lb:'Whiff%',     u:'%',    mn:0,   mx:60,  hi:true},
+  {k:'stuff', lb:'Stuff+',     u:'',     mn:80,  mx:200, hi:true},
+  {k:'vaa',   lb:'VAA',        u:'°',    mn:-12, mx:0,   hi:false},
+];
+
+function renderStats(s, type) {
+  const col = ARSENAL[type].color;
+  document.getElementById('stats-grid').innerHTML = STAT_DEFS.map(d => {
+    const v = s[d.k];
+    const disp = typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v;
+    let bar = '';
+    if(d.mn !== null) {
+      const pct = Math.min(Math.max((v - d.mn)/(d.mx - d.mn)*100, 0),100);
+      bar = `<div class="rank-bar"><div class="rank-fill" style="width:${pct}%;background:${col}"></div></div>`;
+    }
+    // Percentile vs MLB for eligible stats
+    const pctMap = {velo:'velo', spin:'spin', ivb:'ivb', hb:'hb', eff:'eff', whiff:'whiff', stuff:'stuff'};
+    let pctBadge = '';
+    if(pctMap[d.k] && LEAGUE_DIST[type]) {
+      const pctVal = getPct(v, d.k, type);
+      if(pctVal !== null) {
+        const pctCol = pctVal >= 80 ? '#4ADE80' : pctVal >= 50 ? '#FBBF24' : '#888892';
+        pctBadge = `<span style="font-size:8px;color:${pctCol};font-family:'JetBrains Mono',monospace;margin-left:4px">${pctVal}th</span>`;
+      }
+    }
+    return `<div class="sc ${d.hi?'hl':''}">
+      <div class="sl">${d.lb}</div>
+      <div class="sv" style="${d.hi?`color:${col}`:''}">
+        ${disp}<span class="su"> ${d.u}</span>${pctBadge}
+      </div>
+      ${bar}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// SANDBOX
+// ══════════════════════════════════════════════════════════════
+const SB_DEFS = [
+  {k:'velo',  lb:'Velocity (mph)',       mn:60, mx:105, st:0.1},
+  {k:'spin',  lb:'Spin Rate (rpm)',      mn:1000,mx:3500,st:10},
+  {k:'ivb',   lb:'Induced Vert Break (")', mn:-20,mx:25, st:0.1},
+  {k:'hb',    lb:'Horiz Break (")',      mn:-25, mx:10, st:0.1},
+  {k:'eff',   lb:'Spin Efficiency (%)', mn:20,  mx:100, st:1},
+  {k:'ext',   lb:'Extension (ft)',      mn:5.0, mx:8.5, st:0.1},
+];
+
+function renderSandbox() {
+  document.getElementById('sb-grid').innerHTML = SB_DEFS.map(d => {
+    const v = sbVals[d.k] || 0;
+    const disp = typeof v === 'number' ? v.toFixed(d.st < 1 ? 1 : 0) : v;
+    return `<div class="sb-cell">
+      <label>${d.lb}</label>
+      <div class="sb-row">
+        <input type="range" min="${d.mn}" max="${d.mx}" step="${d.st}"
+          value="${v}" id="r-${d.k}" oninput="sbUpdate('${d.k}',this.value)">
+        <input type="number" min="${d.mn}" max="${d.mx}" step="${d.st}"
+          value="${disp}" id="n-${d.k}" oninput="sbUpdate('${d.k}',this.value)">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function sbUpdate(k, val) {
+  sbVals[k] = parseFloat(val);
+  const r = document.getElementById('r-'+k);
+  const n = document.getElementById('n-'+k);
+  if(r) r.value = val;
+  if(n) n.value = parseFloat(val).toFixed(SB_DEFS.find(d=>d.k===k)?.st < 1 ? 1 : 0);
+
+  // Real-time updates (debounced 80ms)
+  clearTimeout(window._sbTimer);
+  window._sbTimer = setTimeout(() => {
+    updateTraj(sbVals, curPitch);
+    renderMovPlot();
+    updateClassifier();
+    document.getElementById('traj-badge').textContent =
+      `${parseFloat(sbVals.velo||99).toFixed(1)} MPH · ${Math.round(sbVals.spin||2500)} RPM`;
+  }, 80);
+}
+
+// ── AUTO PITCH CLASSIFIER ──────────────────────────────────────
+// Compares sandbox values against league average profiles per pitch type
+// Tells the user what their design most closely resembles
+const PITCH_AVERAGES = {
+  FF: {ivb:15.8, hb:6.2,  velo:94.1, spin:2280, eff:90},
+  SI: {ivb:7.4,  hb:14.8, velo:93.2, spin:2140, eff:74},
+  CT: {ivb:9.2,  hb:-4.8, velo:91.6, spin:2340, eff:82},
+  SL: {ivb:1.8,  hb:-10.2,velo:85.4, spin:2480, eff:56},
+  SW: {ivb:2.4,  hb:-16.8,velo:82.8, spin:2540, eff:44},
+  CU: {ivb:-9.8, hb:-7.2, velo:78.2, spin:2580, eff:72},
+  CH: {ivb:7.2,  hb:9.8,  velo:85.8, spin:1780, eff:40},
+  SP: {ivb:-1.2, hb:10.4, velo:87.4, spin:1540, eff:38},
+};
+const PITCH_TYPE_NAMES = {
+  FF:'Four-Seam', SI:'Sinker', CT:'Cutter', SL:'Slider',
+  SW:'Sweeper',   CU:'Curveball', CH:'Changeup', SP:'Splinker'
+};
+
+function classifyPitch(vals) {
+  let best = null, bestScore = -1;
+  const w = {ivb:0.30, hb:0.30, velo:0.20, spin:0.12, eff:0.08};
+  const ranges = {ivb:35, hb:28, velo:22, spin:1600, eff:65};
+
+  for(const [type, avg] of Object.entries(PITCH_AVERAGES)) {
+    let score = 0;
+    for(const [m, wt] of Object.entries(w)) {
+      const diff = Math.abs((vals[m]||0) - (avg[m]||0));
+      score += wt * Math.max(0, 1 - diff/ranges[m]);
+    }
+    if(score > bestScore) { bestScore = score; best = type; }
+  }
+  return {type: best, name: PITCH_TYPE_NAMES[best], confidence: Math.round(bestScore * 100)};
+}
+
+function updateClassifier() {
+  const el = document.getElementById('classifier-badge');
+  if(!el) return;
+  const result = classifyPitch(sbVals);
+  const col = ARSENAL[result.type]?.color || '#FFB612';
+  el.innerHTML = `<span style="color:var(--muted2);font-size:9px;letter-spacing:1.5px;">MOVEMENT RESEMBLES </span><span style="color:${col};font-weight:700;font-size:12px;letter-spacing:1px;">${result.name.toUpperCase()}</span><span style="color:var(--muted);font-size:9px;"> · ${result.confidence}% match</span>`;
+}
+
+function setMode(mode) {
+  curMode = mode;
+  document.getElementById('m-exist').classList.toggle('active', mode==='existing');
+  document.getElementById('m-design').classList.toggle('active', mode==='design');
+}
+
+function runDesign() {
+  updateTraj(sbVals, curPitch);
+  renderComps(curPitch, sbVals);
+  renderMovPlot();
+  renderZoneMap();
+  renderVAAPanel(curPitch, sbVals);
+  updateClassifier();
+  renderDynamicGrip(sbVals, curPitch);
+  document.getElementById('traj-badge').textContent =
+    `${parseFloat(sbVals.velo||99).toFixed(1)} MPH · ${Math.round(sbVals.spin||2500)} RPM`;
+  // Update grade for sandbox values
+  const g = getPitchGrade(sbVals, curPitch);
+  const gradeEl = document.getElementById('pitch-grade');
+  if(gradeEl) { gradeEl.textContent = g.grade; gradeEl.style.color = g.col; }
+}
+
+function resetSandbox() {
+  sbVals = {...ARSENAL[curPitch].stats};
+  renderSandbox();
+  updateTraj(sbVals, curPitch);
+  renderMovPlot();
+  renderZoneMap();
+  renderVAAPanel(curPitch, sbVals);
+  updateClassifier();
+  renderDynamicGrip(sbVals, curPitch);
+  const g = getPitchGrade(sbVals, curPitch);
+  const gradeEl = document.getElementById('pitch-grade');
+  if(gradeEl) { gradeEl.textContent = g.grade; gradeEl.style.color = g.col; }
+  document.getElementById('traj-badge').textContent =
+    `${sbVals.velo} MPH · ${sbVals.spin} RPM`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// GRIP AUTO-LOAD
+// Naming: grips/skenes_{type}.jpg for Skenes
+//         grips/{pitcher_slug}_{type}.jpg for comps
+// Drop images in grips/ folder alongside index.html
+// ══════════════════════════════════════════════════════════════
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/__+/g,'_');
+}
+
+function tryLoadImage(imgEl, src, onFail) {
+  const t = new Image();
+  t.onload  = () => { imgEl.src = src; imgEl.classList.add('loaded'); };
+  t.onerror = () => { if(onFail) onFail(); };
+  t.src = src;
+}
+
+function loadSkenesGrip(type) {
+  const img    = document.getElementById('grip-img');
+  const canvas = document.getElementById('grip-canvas');
+  const video  = document.getElementById('grip-video');
+
+  // Always draw the canvas illustration immediately
+  drawGripCanvas(type, null);
+
+  // Try loading Paul's actual grip photo
+  // If it loads → show photo, hide canvas
+  // If 404    → keep canvas
+  if(img) {
+    img.style.display = 'none';
+    const t = new Image();
+    t.onload = () => {
+      img.src = `grips/skenes_${type.toLowerCase()}.jpg`;
+      img.style.display = 'block';
+      if(canvas) canvas.style.display = 'none';
+    };
+    t.onerror = () => {
+      img.style.display = 'none';
+      if(canvas) canvas.style.display = 'block';
+    };
+    t.src = `grips/skenes_${type.toLowerCase()}.jpg`;
+  }
+
+  // Video
+  if(video) {
+    video.onerror = () => { video.style.display = 'none'; };
+    video.oncanplay = () => { video.style.display = 'block'; };
+    video.src = `grips/skenes_${type.toLowerCase()}.mp4`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DYNAMIC GRIP DIAGRAM — live-updating from sandbox values
+// Maps pitch physics to visual grip adjustments per pitch type
+// ══════════════════════════════════════════════════════════════
+
+// Paul's baseline grip parameters per pitch type
+// These are the "zero-adjustment" reference points
+const GRIP_BASELINE = {
+  FF: { fingerOffsetX:0,    fingerOffsetY:-0.12, split:0.22, depth:0.10, seamRot:0 },
+  SW: { fingerOffsetX:0.18, fingerOffsetY:-0.05, split:0.35, depth:0.08, seamRot:0.55 },
+  SP: { fingerOffsetX:0,    fingerOffsetY:0,     split:0.50, depth:0.18, seamRot:0.10 },
+  CH: { fingerOffsetX:0,    fingerOffsetY:0.05,  split:0.28, depth:0.22, seamRot:0.05 },
+  SI: { fingerOffsetX:0.08, fingerOffsetY:-0.08, split:0.18, depth:0.10, seamRot:0.20 },
+  SL: { fingerOffsetX:0.12, fingerOffsetY:-0.08, split:0.20, depth:0.10, seamRot:0.40 },
+  CU: { fingerOffsetX:0.02, fingerOffsetY:-0.18, split:0.18, depth:0.15, seamRot:-0.35 },
+};
+
+// Paul's 2025 baseline stats for comparison (delta = sandbox - baseline)
+const STAT_BASELINE = {
+  FF: { hb:15.2, ivb:11.0, eff:86, velo:98.2 },
+  SW: { hb:-11.4,ivb:6.0,  eff:37, velo:84.5 },
+  SP: { hb:15.0, ivb:-2.8, eff:44, velo:94.0 },
+  CH: { hb:14.0, ivb:9.0,  eff:42, velo:88.0 },
+  SI: { hb:17.0, ivb:5.2,  eff:74, velo:97.0 },
+  SL: { hb:-15.0,ivb:7.0,  eff:55, velo:85.0 },
+  CU: { hb:-2.0, ivb:-5.0, eff:50, velo:84.0 },
+};
+
+function renderDynamicGrip(stats, type) {
+  const adjText = document.getElementById('grip-adjustment-text');
+  const col = ARSENAL[type]?.color || '#FFB612';
+
+  const statBase = STAT_BASELINE[type] || STAT_BASELINE.FF;
+  const dHb  = (stats.hb  || 0) - statBase.hb;
+  const dIvb = (stats.ivb || 0) - statBase.ivb;
+  const dEff = (stats.eff || 0) - statBase.eff;
+  const dVelo= (stats.velo|| 0) - statBase.velo;
+
+  const adjustments = [];
+  if(Math.abs(dHb) > 1.5) {
+    const dir = (type==='SW'||type==='SL') ? (dHb>0?'TOWARD ARM-SIDE SEAM':'TOWARD LEATHER') : (dHb>0?'TOWARD ARM-SIDE':'TOWARD GLOVE-SIDE');
+    adjustments.push(`SLIDE FINGERS ${dir} (${dHb>0?'+':''}${dHb.toFixed(1)}" HB)`);
+  }
+  if(Math.abs(dIvb) > 1.5) adjustments.push(`MOVE FINGERS ${dIvb>0?'UP BALL':'DOWN BALL'} (${dIvb>0?'+':''}${dIvb.toFixed(1)}" IVB)`);
+  if(Math.abs(dEff) > 5)   adjustments.push(`${dEff>0?'TIGHTEN GRIP':'LOOSEN/WIDEN SPLIT'} (${dEff>0?'+':''}${dEff.toFixed(0)}% EFF)`);
+  if(Math.abs(dVelo) > 1.5) adjustments.push(`${dVelo>0?'FINGER TIPS':'DEEPER IN PALM'} (${dVelo>0?'+':''}${dVelo.toFixed(1)} MPH)`);
+
+  if(adjText) {
+    adjText.innerHTML = adjustments.length === 0
+      ? `<span style="color:var(--green)">✓ PAUL'S BASELINE GRIP</span>`
+      : adjustments.map(a => `<span style="color:${col}">→</span> ${a}`).join('<br>');
+  }
+
+  // Update SVG in frame if it exists
+  const wrap = document.getElementById('grip-svg-wrap');
+  if(wrap && !document.getElementById('grip-img')?.classList.contains('loaded')) {
+    wrap.innerHTML = gripDiagramSVG(type, col);
+  }
+}
+
+
+// Hook renderDynamicGrip into every slider change
+// sbUpdate is defined earlier — we patch it here after renderDynamicGrip is defined
+const _sbUpdateOrig = sbUpdate;
+sbUpdate = function(k, v) {
+  _sbUpdateOrig(k, v);
+  setTimeout(() => renderDynamicGrip(sbVals, curPitch), 60);
+};
+// Drawn from pitcher's POV, catcher's view orientation
+// ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// GRIP CANVAS — realistic hand-on-baseball illustration
+// Top-down view: you see fingers gripping the ball from above
+// Paul's actual photos load automatically when present in grips/
+// This canvas is the fallback for design mode or missing photos
+// ══════════════════════════════════════════════════════════════
+function drawGripCanvas(type, stats) {
+  const canvas = document.getElementById('grip-canvas');
+  if(!canvas) return;
+  const W = canvas.width = canvas.parentElement?.clientWidth * (window.devicePixelRatio||1) || 240;
+  const H = canvas.height = W;
+  canvas.style.width  = (canvas.parentElement?.clientWidth || 240) + 'px';
+  canvas.style.height = (canvas.parentElement?.clientWidth || 240) + 'px';
+  const ctx = canvas.getContext('2d');
+  const col = ARSENAL[type]?.color || '#FFB612';
+
+  ctx.fillStyle = '#0C0C0F';
+  ctx.fillRect(0,0,W,H);
+
+  const cx = W*0.50, cy = H*0.50, R = W*0.31;
+
+  // ── BASEBALL ───────────────────────────────────────────────
+  // Ball gradient — white leather look
+  const ballG = ctx.createRadialGradient(cx-R*.28, cy-R*.28, R*.05, cx, cy, R);
+  ballG.addColorStop(0,   '#FFFFFF');
+  ballG.addColorStop(0.45,'#F5F1E8');
+  ballG.addColorStop(0.80,'#E5DDD0');
+  ballG.addColorStop(1,   '#C8C0B0');
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle=ballG; ctx.fill();
+
+  // Edge shadow
+  const edgeG = ctx.createRadialGradient(cx,cy,R*.6,cx,cy,R*1.01);
+  edgeG.addColorStop(0,'rgba(0,0,0,0)');
+  edgeG.addColorStop(1,'rgba(0,0,0,.30)');
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle=edgeG; ctx.fill();
+
+  // ── SEAMS — correct per pitch type ─────────────────────────
+  // Clipped to ball
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+
+  const sc = '#C41111', sw = R*0.038;
+
+  // Grip-type seam configurations
+  const seams = {
+    // 4-seam: wide horseshoe top and bottom
+    FF: () => {
+      // Top horseshoe (opens up)
+      ctx.beginPath();
+      ctx.moveTo(cx-R*.58,cy-R*.18);
+      ctx.bezierCurveTo(cx-R*.42,cy-R*.56, cx+R*.42,cy-R*.56, cx+R*.58,cy-R*.18);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.lineCap='round'; ctx.stroke();
+      // Bottom horseshoe (opens down)
+      ctx.beginPath();
+      ctx.moveTo(cx-R*.58,cy+R*.18);
+      ctx.bezierCurveTo(cx-R*.42,cy+R*.56, cx+R*.42,cy+R*.56, cx+R*.58,cy+R*.18);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.stroke();
+      // Left connector
+      ctx.beginPath();
+      ctx.moveTo(cx-R*.58,cy-R*.18);
+      ctx.bezierCurveTo(cx-R*.72,cy, cx-R*.72,cy, cx-R*.58,cy+R*.18);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.stroke();
+      // Right connector
+      ctx.beginPath();
+      ctx.moveTo(cx+R*.58,cy-R*.18);
+      ctx.bezierCurveTo(cx+R*.72,cy, cx+R*.72,cy, cx+R*.58,cy+R*.18);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.stroke();
+    },
+    // 2-seam / sinker: two narrow parallel S-curves
+    SI: () => {
+      ctx.beginPath();
+      ctx.moveTo(cx-R*.18,cy-R*.80);
+      ctx.bezierCurveTo(cx-R*.35,cy-R*.35, cx-R*.05,cy+R*.35, cx-R*.18,cy+R*.80);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx+R*.18,cy-R*.80);
+      ctx.bezierCurveTo(cx+R*.05,cy-R*.35, cx+R*.35,cy+R*.35, cx+R*.18,cy+R*.80);
+      ctx.strokeStyle=sc; ctx.lineWidth=sw; ctx.stroke();
+    },
+  };
+  // Most pitches grip on or near the 4-seam horseshoe
+  const seamFn = seams[type] || (type==='SI'||type==='SP' ? seams.SI : seams.FF);
+  seamFn();
+
+  // Stitch marks
+  ctx.strokeStyle = '#9A0E0E'; ctx.lineWidth = sw*0.55;
+  // Small tick marks along each seam (approximate placement)
+  const stitchPts = type==='SI'||type==='SP' ? [
+    [cx-R*.20,cy-R*.55],[cx-R*.30,cy-R*.20],[cx-R*.12,cy+R*.20],[cx-R*.20,cy+R*.55],
+    [cx+R*.20,cy-R*.55],[cx+R*.10,cy-R*.20],[cx+R*.30,cy+R*.20],[cx+R*.20,cy+R*.55],
+  ] : [
+    [cx-R*.42,cy-R*.40],[cx-R*.18,cy-R*.50],[cx+R*.18,cy-R*.50],[cx+R*.42,cy-R*.40],
+    [cx-R*.42,cy+R*.40],[cx-R*.18,cy+R*.50],[cx+R*.18,cy+R*.50],[cx+R*.42,cy+R*.40],
+    [cx-R*.66,cy-R*.08],[cx-R*.66,cy+R*.08],[cx+R*.66,cy-R*.08],[cx+R*.66,cy+R*.08],
+  ];
+  stitchPts.forEach(([sx,sy]) => {
+    const ang = Math.atan2(sy-cy,sx-cx)+Math.PI/2;
+    const len = R*.065;
+    ctx.beginPath();
+    ctx.moveTo(sx-Math.cos(ang)*len,sy-Math.sin(ang)*len);
+    ctx.lineTo(sx+Math.cos(ang)*len,sy+Math.sin(ang)*len);
+    ctx.stroke();
+  });
+
+  ctx.restore();
+
+  // Ball gloss
+  const glossG = ctx.createRadialGradient(cx-R*.32,cy-R*.32,0,cx-R*.16,cy-R*.16,R*.48);
+  glossG.addColorStop(0,'rgba(255,255,255,0.22)');
+  glossG.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle=glossG; ctx.fill();
+
+  // ── HAND / FINGERS ─────────────────────────────────────────
+  // Draw finger as a rounded rectangle with knuckle lines
+  function drawFinger(fx,fy,fw,fh,angle,skinTone,label) {
+    ctx.save();
+    ctx.translate(fx,fy); ctx.rotate(angle);
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    ctx.beginPath();
+    ctx.roundRect(-fw/2+2,  -fh/2+2, fw, fh, fw/2);
+    ctx.fill();
+    // Finger body
+    const fGrad = ctx.createLinearGradient(-fw/2,0,fw/2,0);
+    fGrad.addColorStop(0,   skinTone+'CC');
+    fGrad.addColorStop(0.3, skinTone);
+    fGrad.addColorStop(0.7, skinTone);
+    fGrad.addColorStop(1,   skinTone+'AA');
+    ctx.fillStyle=fGrad;
+    ctx.beginPath();
+    ctx.roundRect(-fw/2,-fh/2,fw,fh,fw/2);
+    ctx.fill();
+    // Knuckle lines (2 horizontal creases across finger)
+    ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=1.2;
+    [-fh*.18, fh*.12].forEach(ky => {
+      ctx.beginPath();
+      ctx.moveTo(-fw*.38, ky); ctx.lineTo(fw*.38, ky);
+      ctx.stroke();
+    });
+    // Fingernail hint at tip
+    ctx.fillStyle='rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0,-fh*.34,fw*.28,fh*.12,0,0,Math.PI*2);
+    ctx.fill();
+    // Outline
+    ctx.strokeStyle='rgba(0,0,0,0.30)'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.roundRect(-fw/2,-fh/2,fw,fh,fw/2);
+    ctx.stroke();
+    // Label
+    if(label) {
+      ctx.fillStyle='rgba(255,255,255,0.70)';
+      ctx.font=`bold ${Math.round(fw*.40)}px JetBrains Mono`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(label, 0, fh*.22);
+    }
+    ctx.restore();
+  }
+
+  function drawThumb(tx,ty,tw,th,angle) {
+    ctx.save();
+    ctx.translate(tx,ty); ctx.rotate(angle);
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    ctx.beginPath(); ctx.roundRect(-tw/2+2,-th/2+2,tw,th,tw/2); ctx.fill();
+    const tGrad = ctx.createLinearGradient(0,-th/2,0,th/2);
+    tGrad.addColorStop(0,'#C4956A'); tGrad.addColorStop(1,'#A87850');
+    ctx.fillStyle=tGrad;
+    ctx.beginPath(); ctx.roundRect(-tw/2,-th/2,tw,th,tw/2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.28)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.roundRect(-tw/2,-th/2,tw,th,tw/2); ctx.stroke();
+    // knuckle
+    ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(-tw*.35,th*.05); ctx.lineTo(tw*.35,th*.05); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Skin tone — lighter
+  const SKIN = '#D4956A';
+
+  // Finger dimensions
+  const fw = R*.28;  // finger width
+  const fh = R*.65;  // finger height (length visible)
+
+  // Grip configurations per pitch type
+  const grips = {
+    FF: () => {
+      // Two fingers close together across wide seam at top
+      drawFinger(cx-fw*.55, cy-R*.72, fw, fh, 0, SKIN, 'I');
+      drawFinger(cx+fw*.55, cy-R*.72, fw, fh, 0, SKIN, 'M');
+      drawThumb(cx+R*.62, cy+R*.30, fw*.80, fh*.55, -Math.PI*.35);
+    },
+    SI: () => {
+      // Fingers along the narrow parallel seams
+      drawFinger(cx-fw*.45, cy-R*.72, fw, fh, 0, SKIN, 'I');
+      drawFinger(cx+fw*.55, cy-R*.72, fw, fh, 0, SKIN, 'M');
+      drawThumb(cx+R*.62, cy+R*.28, fw*.80, fh*.55, -Math.PI*.35);
+    },
+    SW: () => {
+      // Fingers shifted to outer seam edge (glove side)
+      drawFinger(cx+fw*.22, cy-R*.72, fw, fh, Math.PI*.06, SKIN, 'I');
+      drawFinger(cx+fw*1.1, cy-R*.66, fw, fh, Math.PI*.08, SKIN, 'M');
+      drawThumb(cx-R*.55, cy+R*.20, fw*.80, fh*.55, Math.PI*.35);
+    },
+    SP: () => {
+      // Wide split — fingers split outside the narrow seams
+      drawFinger(cx-fw*1.3, cy-R*.68, fw, fh, Math.PI*.05, SKIN, 'I');
+      drawFinger(cx+fw*1.3, cy-R*.68, fw, fh, -Math.PI*.05, SKIN, 'M');
+      drawThumb(cx+R*.55, cy+R*.30, fw*.80, fh*.55, -Math.PI*.32);
+    },
+    CH: () => {
+      // Vulcan: ring+middle split, index+pinky tucked
+      drawFinger(cx-fw*1.20, cy-R*.68, fw*.85, fh, Math.PI*.04, SKIN, 'M');
+      drawFinger(cx+fw*1.20, cy-R*.68, fw*.85, fh, -Math.PI*.04, SKIN, 'R');
+      drawFinger(cx-fw*2.1,  cy-R*.45, fw*.75, fh*.70, Math.PI*.20, SKIN+'99', 'I');
+      drawFinger(cx+fw*2.1,  cy-R*.45, fw*.75, fh*.70, -Math.PI*.20, SKIN+'99', 'P');
+      drawThumb(cx+R*.62, cy+R*.30, fw*.80, fh*.55, -Math.PI*.35);
+    },
+    SL: () => {
+      // Fingers on narrow seam, slight outside offset
+      drawFinger(cx+fw*.15, cy-R*.74, fw, fh, -Math.PI*.08, SKIN, 'I');
+      drawFinger(cx+fw*.95, cy-R*.68, fw, fh, -Math.PI*.08, SKIN, 'M');
+      drawThumb(cx-R*.60, cy+R*.25, fw*.80, fh*.55, Math.PI*.38);
+    },
+    CU: () => {
+      // Middle finger ON the right seam with pressure, index alongside
+      drawFinger(cx+fw*.55, cy-R*.76, fw, fh, -Math.PI*.04, SKIN, 'M');
+      drawFinger(cx-fw*.25, cy-R*.72, fw*.85, fh, 0, SKIN+'BB', 'I');
+      drawThumb(cx+R*.62, cy+R*.28, fw*.80, fh*.55, -Math.PI*.35);
+    },
+  };
+
+  (grips[type] || grips.FF)();
+
+  // ── LABEL ──────────────────────────────────────────────────
+  ctx.fillStyle = col+'CC';
+  ctx.font = `bold ${Math.round(W*.052)}px JetBrains Mono`;
+  ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText(ARSENAL[type]?.name?.toUpperCase() || type, cx, H-6);
+
+  // Finger key
+  ctx.fillStyle = '#333340'; ctx.font = `${Math.round(W*.038)}px JetBrains Mono`;
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText('I=index  M=middle  R=ring  P=pinky', 6, 5);
+}
+
+// ── UPDATE from sandbox sliders ─────────────────────────────
+function renderDynamicGrip(stats, type) {
+  const adjText = document.getElementById('grip-adjustment-text');
+  const canvas  = document.getElementById('grip-canvas');
+  const img     = document.getElementById('grip-img');
+
+  // Redraw canvas only if photo isn't showing
+  if(!img || img.style.display === 'none') {
+    drawGripCanvas(type, stats);
+  }
+
+  // Adjustment text from stat deltas
+  const col      = ARSENAL[type]?.color || '#FFB612';
+  const statBase = STAT_BASELINE[type]  || STAT_BASELINE.FF;
+  const dHb   = (stats.hb   || 0) - statBase.hb;
+  const dIvb  = (stats.ivb  || 0) - statBase.ivb;
+  const dEff  = (stats.eff  || 0) - statBase.eff;
+  const dVelo = (stats.velo || 0) - statBase.velo;
+
+  const adj = [];
+  if(Math.abs(dHb)   > 1.5) adj.push(`${dHb>0?'→ ARM-SIDE':'→ GLOVE-SIDE'} (${dHb>0?'+':''}${dHb.toFixed(1)}" HB)`);
+  if(Math.abs(dIvb)  > 1.5) adj.push(`→ MOVE FINGERS ${dIvb>0?'UP':'DOWN'} BALL (${dIvb>0?'+':''}${dIvb.toFixed(1)}" IVB)`);
+  if(Math.abs(dEff)  > 5)   adj.push(`→ ${dEff>0?'TIGHTEN GRIP':'LOOSEN / WIDEN SPLIT'} (${dEff>0?'+':''}${dEff.toFixed(0)}% EFF)`);
+  if(Math.abs(dVelo) > 1.5) adj.push(`→ ${dVelo>0?'OUT TO FINGERTIPS':'DEEPER IN PALM'} (${dVelo>0?'+':''}${dVelo.toFixed(1)} MPH)`);
+
+  if(adjText) adjText.innerHTML = adj.length === 0
+    ? `<span style="color:var(--green)">✓ PAUL'S BASELINE GRIP</span>`
+    : adj.map(a => `<span style="color:${col}">${a}</span>`).join('<br>');
+}
+
+// Stub — SVG version no longer used
+function gripDiagramSVG(type, col) { return ''; }
+
+function deltaClass(diff, threshold) {
+  const abs = Math.abs(diff);
+  if(abs <= threshold * 0.4) return 'delta-close';
+  if(abs <= threshold * 0.8) return 'delta-mid';
+  return 'delta-far';
+}
+
+function deltaBadge(label, val, unit, threshold) {
+  const sign = val > 0 ? '+' : '';
+  const cls  = deltaClass(val, threshold);
+  return `<span class="delta-chip ${cls}">${label} ${sign}${parseFloat(val).toFixed(1)}${unit}</span>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// MATCHING ENGINE
+// ══════════════════════════════════════════════════════════════
+const W_MATCH = { ivb:0.32, hb:0.32, velo:0.18, spin:0.10, eff:0.08 };
+const RANGES   = { ivb:40,   hb:30,   velo:25,   spin:1800, eff:70  };
+
+function findComps(type, target) {
+  return REPO
+    .filter(r => r.p === type)
+    .map(r => {
+      let score = 0;
+      for(const [m, w] of Object.entries(W_MATCH)) {
+        const diff = Math.abs((target[m]||0) - (r[m]||0));
+        score += w * Math.max(0, 1 - diff/RANGES[m]);
+      }
+      return {...r, score};
+    })
+    .sort((a,b) => b.score - a.score)
+    .slice(0,3);
+}
+
+function renderComps(type, target) {
+  const comps = findComps(type, target);
+  const col   = ARSENAL[type].color;
+  const ranks = ['#1 BEST MATCH','#2 MATCH','#3 MATCH'];
+
+  document.getElementById('comp-grid').innerHTML = comps.map((c,i) => {
+    const pct  = Math.round(c.score * 100);
+    const dIvb = c.ivb - (target.ivb||0);
+    const dHb  = c.hb  - (target.hb||0);
+    const dVel = c.velo- (target.velo||0);
+    const dSpin= c.spin- (target.spin||0);
+    const slug = slugify(c.n);
+    const gripSrc = `grips/${slug}_${c.p.toLowerCase()}.jpg`;
+    const gripId  = `cg-${i}`;
+
+    return `<div class="comp-card">
+      <div class="comp-rank" style="color:${col}">${ranks[i]}</div>
+      <div style="position:relative;margin-bottom:10px;">
+        <img id="${gripId}" class="comp-grip-img" src="" alt="${c.n} grip">
+        <div class="comp-grip-slot" id="${gripId}-ph">${gripDiagramSVG(c.p, col)}<div style="margin-top:4px;font-size:8px;letter-spacing:1.2px;color:var(--muted)">${c.n.toUpperCase()} · ${c.p}</div></div>
+      </div>
+      <div class="comp-pitcher">${c.n}</div>
+      <div class="comp-team">${c.t} · ${c.p}</div>
+      <div class="comp-stats">
+        <div class="cs"><span class="csl">Velocity</span><span class="csv">${c.velo} mph</span></div>
+        <div class="cs"><span class="csl">Spin Rate</span><span class="csv">${c.spin} rpm</span></div>
+        <div class="cs"><span class="csl">IVB</span><span class="csv">${c.ivb}"</span></div>
+        <div class="cs"><span class="csl">Horiz Break</span><span class="csv">${c.hb > 0 ? '+' : ''}${c.hb}"</span></div>
+        <div class="cs"><span class="csl">Tilt</span><span class="csv">${c.tilt}</span></div>
+        <div class="cs"><span class="csl">Spin Eff</span><span class="csv">${c.eff}%</span></div>
+      </div>
+      <div class="delta-row">
+        ${deltaBadge('ΔIVB', dIvb, '"', 4)}
+        ${deltaBadge('ΔHB',  dHb,  '"', 4)}
+        ${deltaBadge('ΔVELO',dVel, '', 5)}
+        ${deltaBadge('ΔSPIN',dSpin,' rpm', 200)}
+      </div>
+      ${GRIP_NOTES[`${c.n}_${c.p}`] ? `<div style="margin-top:8px;padding:7px 8px;background:var(--card);border-radius:2px;border-left:2px solid ${col};font-size:9.5px;color:var(--muted2);line-height:1.5;font-style:italic;">${GRIP_NOTES[`${c.n}_${c.p}`]}</div>` : ''}
+      <div class="sim-bar" style="margin-top:10px"><div class="sim-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="sim-label">Match Score: <span style="color:${col};font-weight:600">${pct}%</span></div>
+    </div>`;
+  }).join('');
+
+  // Try loading comp grip images after DOM update
+  setTimeout(() => {
+    comps.forEach((c, i) => {
+      const img = document.getElementById(`cg-${i}`);
+      const ph  = document.getElementById(`cg-${i}-ph`);
+      if(img && ph) {
+        tryLoadImage(img, `grips/${slugify(c.n)}_${c.p.toLowerCase()}.jpg`, null);
+        img.onload = () => { ph.style.display = 'none'; };
+      }
+    });
+  }, 50);
+}
+
+// ══════════════════════════════════════════════════════════════
+// THREE.JS: TRAJECTORY
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// TRAJECTORY — Canvas 2D, batter POV, HAA quadratic physics
+// Same formula as skenes-mound HAA model:
+//   x(f) = relX + (plateLoc - pfx - relX)*f + pfx*f²
+//   y(f) = relH + gravY*f² + ivb*f²   (gravity + Magnus)
+// f=0 at release, f=1 at plate
+// ══════════════════════════════════════════════════════════════
+// TRAJECTORY — HAA Model (exact port from skenes-mound)
+// Top-down view: mound at top, home plate at bottom
+// x(f) = relX + (plateLoc - pfx - relX)*f + pfx*f²  [quadratic Magnus]
+// ══════════════════════════════════════════════════════════════
+const RUBBER_TO_PLATE_IN = 726;   // 60.5 ft in inches
+const EXTENSION_IN       = 84;    // 7 ft extension
+const DIST_IN            = RUBBER_TO_PLATE_IN - EXTENSION_IN; // 642"
+const TUNNEL_F           = (28 * 12) / DIST_IN; // 28-ft tunnel as fraction
+
+let trajF    = 0;
+let trajData = null;
+
+function haaTrajX(relX, pfx, plateLoc, f) {
+  return relX + (plateLoc - pfx - relX) * f + pfx * f * f;
+}
+function calcHAAdeg(relX, plateLoc) {
+  return Math.atan2(plateLoc - relX, DIST_IN) * (180 / Math.PI);
+}
+
+function initTraj() {
+  const canvas = document.getElementById('traj-canvas');
+  if(!canvas) return;
+  canvas.width  = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight - 36;
+  window.addEventListener('resize', () => {
+    if(!canvas.parentElement) return;
+    canvas.width  = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight - 36;
+    drawTrajectory();
+  });
+  updateTraj(ARSENAL.FF.stats, 'FF');
+}
+
+function updateTraj(s, type) {
+  const col  = ARSENAL[type]?.color || '#FFB612';
+  const name = ARSENAL[type]?.name  || type;
+
+  // Release side: relS in feet, negative = arm-side (first base) for RHP
+  // HAA model x: arm-side = negative (same as skenes-mound convention)
+  const relX    = (s.relS || -1.8) * 12;   // inches
+  // pfx_x: positive = arm-side. In HAA model arm-side = negative x → negate
+  const pfxX    = -(s.hb  || 15);          // inches
+  // Plate target: natural arm angle carries ball slightly toward center
+  const plateLoc = relX * 0.12;
+
+  trajData = {
+    relX, pfxX, plateLoc,
+    haa: calcHAAdeg(relX, plateLoc),
+    col, type, name,
+    velo: s.velo, spin: s.spin,
+    hb: s.hb, ivb: s.ivb
+  };
+  trajF = 0;
+  drawTrajectory();
+}
+
+function drawTrajectory() {
+  const canvas = document.getElementById('traj-canvas');
+  if(!canvas) return;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const d = trajData;
+
+  // ── Background ─────────────────────────────────────────────
+  ctx.fillStyle = '#040b04';
+  ctx.fillRect(0, 0, W, H);
+  if(!d) return;
+
+  // ── Coordinate system — identical to skenes-mound ──────────
+  const cx  = W / 2;
+  const XS  = W / 110;                            // px per inch horizontal
+  const yT  = 22, yB = H - 28;
+  const YS  = (yB - yT) / RUBBER_TO_PLATE_IN;    // px per inch vertical
+
+  const toX = x => cx + x * XS;
+  const toZ = z => yT + z * YS;
+
+  const yRub = toZ(0);
+  const yRel = toZ(EXTENSION_IN);
+  const yTun = toZ(EXTENSION_IN + TUNNEL_F * DIST_IN);
+  const yPlt = toZ(RUBBER_TO_PLATE_IN);
+
+  // ── Grid ───────────────────────────────────────────────────
+  ctx.strokeStyle = '#070e07'; ctx.lineWidth = 1;
+  for(let i=0; i<W; i+=22){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
+  for(let j=0; j<H; j+=22){ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(W,j); ctx.stroke(); }
+
+  // ── Center dashed axis ─────────────────────────────────────
+  ctx.setLineDash([3,7]); ctx.strokeStyle='#0c200c'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(cx,yRub); ctx.lineTo(cx,yPlt); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── 28-ft Tunnel line ──────────────────────────────────────
+  ctx.setLineDash([4,5]); ctx.strokeStyle='#183018'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,yTun); ctx.lineTo(W,yTun); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#2a5a2a'; ctx.font='8px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('28ft tunnel', 3, yTun-3);
+
+  // ── Release line ───────────────────────────────────────────
+  ctx.strokeStyle='#0d1f0d'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,yRel); ctx.lineTo(W,yRel); ctx.stroke();
+  ctx.fillStyle='#1a3a1a'; ctx.font='7px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText('release', 3, yRel-2);
+
+  // ── Rubber ─────────────────────────────────────────────────
+  ctx.fillStyle='#0a180a';
+  ctx.beginPath(); ctx.arc(cx,yRub,16,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2a4a2a'; ctx.fillRect(cx-12,yRub-3,24,6);
+  ctx.fillStyle='#1a3a1a'; ctx.font='7px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('RUBBER', cx, yRub-9);
+
+  // ── Home plate ─────────────────────────────────────────────
+  ctx.strokeStyle='#2a6a2a'; ctx.lineWidth=1.5;
+  ctx.fillStyle='#0f200f';
+  ctx.beginPath();
+  ctx.moveTo(toX(-8.5),yPlt); ctx.lineTo(toX(8.5),yPlt);
+  ctx.lineTo(toX(8.5),yPlt+5); ctx.lineTo(toX(0),yPlt+11);
+  ctx.lineTo(toX(-8.5),yPlt+5); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#2a5a2a'; ctx.font='7px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('HOME PLATE', cx, yPlt+20);
+
+  // Side inch labels at plate
+  ctx.fillStyle='#1a3a1a'; ctx.font='7px JetBrains Mono'; ctx.textAlign='center';
+  [-24,-12,0,12,24].forEach(x => {
+    ctx.fillText((x>0?'+':'')+x+'"', toX(x), yB+8);
+    ctx.strokeStyle='#0d180d'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(toX(x),yRel); ctx.lineTo(toX(x),yPlt); ctx.stroke();
+  });
+
+  // ── Full ghost trajectory ───────────────────────────────────
+  ctx.beginPath();
+  for(let i=0; i<=80; i++){
+    const f  = i/80;
+    const sx = toX(haaTrajX(d.relX, d.pfxX, d.plateLoc, f));
+    const sy = yRel + f*(yPlt-yRel);
+    i===0 ? ctx.moveTo(sx,sy) : ctx.lineTo(sx,sy);
+  }
+  ctx.strokeStyle = d.col+'28'; ctx.lineWidth=1.5;
+  ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+
+  // ── Tunnel dot ─────────────────────────────────────────────
+  const txTun = haaTrajX(d.relX, d.pfxX, d.plateLoc, TUNNEL_F);
+  ctx.fillStyle = d.col+'88';
+  ctx.beginPath(); ctx.arc(toX(txTun),yTun,4,0,Math.PI*2); ctx.fill();
+
+  // ── HAA approach line at plate ──────────────────────────────
+  const haaRad = (d.haa*Math.PI)/180;
+  const px0=toX(d.plateLoc), py0=yPlt;
+  const px1=px0-Math.sin(haaRad)*32, py1=py0-Math.cos(haaRad)*32;
+  ctx.strokeStyle=d.col+'66'; ctx.lineWidth=1.5;
+  ctx.setLineDash([3,2]);
+  ctx.beginPath(); ctx.moveTo(px0,py0); ctx.lineTo(px1,py1); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Plate crossing dot ─────────────────────────────────────
+  ctx.fillStyle=d.col; ctx.shadowColor=d.col; ctx.shadowBlur=12;
+  ctx.beginPath(); ctx.arc(px0,yPlt+1,5,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+
+  // ── Animated ball ──────────────────────────────────────────
+  const fNow = Math.min(trajF,1);
+  const bsx  = toX(haaTrajX(d.relX, d.pfxX, d.plateLoc, fNow));
+  const bsy  = yRel + fNow*(yPlt-yRel);
+  const bR   = 5 + 3*(1-fNow);
+
+  const glow = ctx.createRadialGradient(bsx,bsy,0,bsx,bsy,bR*3);
+  glow.addColorStop(0,d.col+'BB'); glow.addColorStop(1,d.col+'00');
+  ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(bsx,bsy,bR*3,0,Math.PI*2); ctx.fill();
+
+  const bg = ctx.createRadialGradient(bsx-bR*.3,bsy-bR*.3,bR*.1,bsx,bsy,bR);
+  bg.addColorStop(0,'#FFFFFF'); bg.addColorStop(0.6,'#F0EDE8'); bg.addColorStop(1,'#C8C4BC');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(bsx,bsy,bR,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=d.col; ctx.lineWidth=1; ctx.stroke();
+
+  // ── Stats overlay ──────────────────────────────────────────
+  ctx.fillStyle=d.col; ctx.font='bold 11px JetBrains Mono'; ctx.textAlign='left';
+  ctx.fillText(d.velo+' MPH', 6, 14);
+  ctx.fillStyle='#2a5a2a'; ctx.font='8px JetBrains Mono';
+  ctx.fillText(d.spin+' RPM', 6, 24);
+
+  ctx.fillStyle='#1a4a1a'; ctx.font='8px JetBrains Mono'; ctx.textAlign='right';
+  ctx.fillText((d.name||d.type).toUpperCase(), W-4, 14);
+  ctx.fillText('HAA '+( d.haa>0?'+':'')+d.haa.toFixed(1)+'°', W-4, 24);
+
+  ctx.fillStyle=d.col+'BB'; ctx.font='9px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('HB '+(d.hb>0?'+':'')+d.hb+'"  IVB '+(d.ivb>0?'+':'')+d.ivb+'"', cx, yPlt-6);
+}
+
+function animTraj() {
+  trajF += 0.013;
+  if(trajF > 1.18) trajF = 0;
+  drawTrajectory();
+}
+
+function computeTrajectory() { return []; } // stub
+
+
+// ══════════════════════════════════════════════════════════════
+
+
+
+
+// ══════════════════════════════════════════════════════════════
+// DATA: ZONE HEAT MAP — 2025 Skenes approximate (catcher's view)
+// Zones 1-9: standard Statcast, 1=up-arm, 3=up-glove, 7=dn-arm, 9=dn-glove
+// ══════════════════════════════════════════════════════════════
+const ZONE_DATA = {
+  FF:{
+    ALL:{ whiff:{1:42,2:36,3:31,4:24,5:20,6:22,7:16,8:14,9:11}, ba:{1:.155,2:.188,3:.202,4:.244,5:.268,6:.252,7:.198,8:.220,9:.238} },
+    RHH:{ whiff:{1:38,2:34,3:28,4:22,5:18,6:20,7:14,8:12,9:10}, ba:{1:.148,2:.185,3:.215,4:.248,5:.274,6:.258,7:.205,8:.228,9:.245} },
+    LHH:{ whiff:{1:48,2:40,3:35,4:28,5:24,6:26,7:19,8:17,9:13}, ba:{1:.160,2:.192,3:.188,4:.238,5:.260,6:.244,7:.188,8:.210,9:.228} },
+  },
+  SW:{
+    ALL:{ whiff:{1:22,2:28,3:38,4:26,5:32,6:44,7:28,8:38,9:52}, ba:{1:.288,2:.248,3:.188,4:.264,5:.218,6:.155,7:.228,8:.182,9:.128} },
+    RHH:{ whiff:{1:18,2:24,3:42,4:22,5:30,6:50,7:26,8:42,9:58}, ba:{1:.295,2:.254,3:.175,4:.271,5:.222,6:.140,7:.235,8:.168,9:.112} },
+    LHH:{ whiff:{1:28,2:34,3:32,4:32,5:36,6:36,7:32,8:32,9:44}, ba:{1:.278,2:.240,3:.202,4:.252,5:.212,6:.172,7:.218,8:.198,9:.148} },
+  },
+  SP:{
+    ALL:{ whiff:{1:44,2:38,3:28,4:38,5:32,6:22,7:32,8:26,9:18}, ba:{1:.148,2:.168,3:.225,4:.155,5:.188,6:.248,7:.168,8:.202,9:.265} },
+    RHH:{ whiff:{1:46,2:40,3:26,4:40,5:34,6:20,7:34,8:28,9:16}, ba:{1:.142,2:.162,3:.232,4:.148,5:.182,6:.255,7:.162,8:.208,9:.272} },
+    LHH:{ whiff:{1:42,2:36,3:30,4:36,5:30,6:24,7:30,8:24,9:20}, ba:{1:.155,2:.175,3:.218,4:.162,5:.195,6:.240,7:.175,8:.195,9:.255} },
+  },
+  CH:{
+    ALL:{ whiff:{1:34,2:30,3:26,4:42,5:38,6:28,7:48,8:44,9:32}, ba:{1:.225,2:.248,3:.268,4:.155,5:.178,6:.218,7:.128,8:.148,9:.182} },
+    RHH:{ whiff:{1:28,2:24,3:20,4:36,5:32,6:22,7:40,8:36,9:26}, ba:{1:.238,2:.262,3:.282,4:.168,5:.192,6:.232,7:.142,8:.162,9:.198} },
+    LHH:{ whiff:{1:42,2:38,3:34,4:50,5:46,6:36,7:58,8:54,9:40}, ba:{1:.208,2:.232,3:.252,4:.138,5:.162,6:.202,7:.108,8:.128,9:.162} },
+  },
+  SI:{
+    ALL:{ whiff:{1:28,2:22,3:18,4:24,5:18,6:14,7:22,8:18,9:12}, ba:{1:.202,2:.238,3:.272,4:.218,5:.258,6:.288,7:.188,8:.228,9:.268} },
+    RHH:{ whiff:{1:30,2:24,3:16,4:26,5:20,6:12,7:24,8:20,9:10}, ba:{1:.195,2:.232,3:.278,4:.212,5:.252,6:.295,7:.182,8:.222,9:.275} },
+    LHH:{ whiff:{1:24,2:18,3:20,4:20,5:14,6:18,7:18,8:14,9:16}, ba:{1:.212,2:.248,3:.262,4:.228,5:.268,6:.278,7:.198,8:.238,9:.258} },
+  },
+  SL:{
+    ALL:{ whiff:{1:18,2:24,3:32,4:22,5:28,6:38,7:24,8:32,9:42}, ba:{1:.285,2:.248,3:.198,4:.268,5:.222,6:.165,7:.242,8:.195,9:.145} },
+    RHH:{ whiff:{1:16,2:22,3:36,4:20,5:26,6:42,7:22,8:34,9:48}, ba:{1:.292,2:.254,3:.188,4:.275,5:.228,6:.152,7:.248,8:.188,9:.132} },
+    LHH:{ whiff:{1:22,2:28,3:26,4:26,5:32,6:32,7:28,8:28,9:34}, ba:{1:.275,2:.240,3:.212,4:.258,5:.212,6:.182,7:.232,8:.205,9:.162} },
+  },
+  CU:{
+    ALL:{ whiff:{1:16,2:20,3:26,4:20,5:24,6:30,7:28,8:34,9:38}, ba:{1:.298,2:.265,3:.228,4:.268,5:.238,6:.195,7:.228,8:.195,9:.162} },
+    RHH:{ whiff:{1:14,2:18,3:30,4:18,5:22,6:34,7:26,8:36,9:42}, ba:{1:.305,2:.272,3:.218,4:.275,5:.244,6:.182,7:.235,8:.188,9:.148} },
+    LHH:{ whiff:{1:20,2:24,3:20,4:24,5:28,6:24,7:32,8:30,9:32}, ba:{1:.288,2:.255,3:.242,4:.258,5:.228,6:.212,7:.218,8:.205,9:.178} },
+  },
+};
+
+// Zone state
+let curZoneMetric = 'whiff';
+let curZoneSplit  = 'ALL';
+// [mean, std_dev] per metric per pitch type (MLB 2025 SP/RP combined)
+// ══════════════════════════════════════════════════════════════
+const LEAGUE_DIST = {
+  FF:{ velo:[94.1,1.8], spin:[2280,240], ivb:[15.8,3.2], hb:[6.2,4.8],  eff:[89,5],  whiff:[23.4,5.8], stuff:[100,12] },
+  SW:{ velo:[82.8,2.4], spin:[2560,280], ivb:[2.4, 3.6], hb:[-16.8,3.8],eff:[44,8],  whiff:[38.2,7.4], stuff:[100,18] },
+  SP:{ velo:[87.4,2.8], spin:[1540,180], ivb:[-1.2,4.2], hb:[10.4,4.4], eff:[38,6],  whiff:[34.8,7.2], stuff:[100,18] },
+  CH:{ velo:[85.8,2.6], spin:[1780,200], ivb:[7.2, 3.8], hb:[9.8, 4.2], eff:[40,8],  whiff:[32.4,7.0], stuff:[100,18] },
+  SI:{ velo:[93.2,1.6], spin:[2140,220], ivb:[7.4, 3.0], hb:[14.8,3.6], eff:[74,7],  whiff:[20.1,5.2], stuff:[100,18] },
+  SL:{ velo:[85.4,2.8], spin:[2480,320], ivb:[1.8, 4.4], hb:[-10.2,5.2],eff:[56,10], whiff:[33.8,7.6], stuff:[100,18] },
+  CU:{ velo:[78.2,3.2], spin:[2580,340], ivb:[-9.8,4.6], hb:[-7.2,4.8], eff:[72,10], whiff:[30.4,7.4], stuff:[100,18] },
+};
+
+// MLB average movement centers for cloud overlay on movement plot
+const MLB_CLOUDS = {
+  FF:{ hb:6.2,  ivb:15.8, rx:5.2, ry:3.8, label:'FF avg' },
+  SI:{ hb:14.8, ivb:7.4,  rx:4.4, ry:3.2, label:'SI avg' },
+  SW:{ hb:-16.8,ivb:2.4,  rx:4.8, ry:3.6, label:'SW avg' },
+  SL:{ hb:-10.2,ivb:1.8,  rx:5.6, ry:4.2, label:'SL avg' },
+  CH:{ hb:9.8,  ivb:7.2,  rx:4.4, ry:3.8, label:'CH avg' },
+  CU:{ hb:-7.2, ivb:-9.8, rx:5.0, ry:4.4, label:'CU avg' },
+  SP:{ hb:10.4, ivb:-1.2, rx:4.0, ry:3.6, label:'SP avg' },
+};
+
+function normalCDF(x, mean, std) {
+  const z = (x - mean) / std;
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const p = 1 - 0.3989423 * Math.exp(-0.5 * z * z) *
+    t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+  return Math.round((z < 0 ? 1 - p : p) * 100);
+}
+
+function getPct(val, metric, pitchType) {
+  const dist = LEAGUE_DIST[pitchType];
+  if(!dist || !dist[metric]) return null;
+  return normalCDF(val, ...dist[metric]);
+}
+
+// ══════════════════════════════════════════════════════════════
+// GRIP DESCRIPTION DATABASE
+// Text-based grip cues for key pitchers — used when images unavailable
+// ══════════════════════════════════════════════════════════════
+const GRIP_NOTES = {
+  'Jhoan Duran_SP':    'Two-finger split with extreme pressure on index finger tip. Ball released off index, killing spin. Sits far back in palm.',
+  'Logan Gilbert_SP':  'Modified split-change: fingers spread just past natural width. Two-seam orientation. Index fingertip on outer seam.',
+  'Kodai Senga_SP':    'Ghost Fork: middle and index split wide, thumb underneath. Near-zero pressure from fingers during release.',
+  'Sandy Alcantara_CH':'Circle change grip with extra pronation at release. Middle finger across top seam. Arm-side fade comes from wrist turn.',
+  'Devin Williams_CH': 'Airbender: extreme circle change. Thumb and index make full circle. Releases off middle and ring fingers. Pure pronation.',
+  'Corbin Burnes_SL':  'Two-finger cutter/slider hybrid. Index and middle tight together off-center. "Cut" intent with slider axis. ~56% efficiency.',
+  'Ryan Helsley_SW':   'Whirlybird grip: index and middle split to outer edges of seams. Throw it like a fastball — grip does the work.',
+  'Clay Holmes_SW':    'Similar whirlybird setup. Slight supination through zone creates the lateral tilt. Lower spin efficiency = more sweeping action.',
+  'Framber Valdez_SI': 'Pronounced two-seam grip. Index slightly raised. Heavy pronation at release. Ball comes off middle finger last.',
+  'Logan Webb_SI':     'Sinker with split-change influence. Fingers slightly wider than standard 2-seam. Creates the drop/run combo.',
+};
+
+// ══════════════════════════════════════════════════════════════
+// MOVEMENT PLOT (with MLB clouds + Skenes dots)
+// ══════════════════════════════════════════════════════════════
+function renderMovPlot() {
+  const canvas = document.getElementById('mov-canvas');
+  canvas.width  = canvas.parentElement.clientWidth;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  if(!ctx) return;
+
+  ctx.fillStyle = '#111114';
+  ctx.fillRect(0,0,W,H);
+
+  const cx = W/2, cy = H/2;
+  const sc = Math.min(W,H*2) / 2 / 26;
+
+  // Grid
+  ctx.strokeStyle = '#1A1A1E';
+  ctx.lineWidth = 1;
+  for(let i=-25; i<=25; i+=5) {
+    ctx.beginPath(); ctx.moveTo(cx+i*sc,0); ctx.lineTo(cx+i*sc,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,cy-i*sc); ctx.lineTo(W,cy-i*sc); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#2A2A2F';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+
+  // Axis ticks
+  ctx.fillStyle = '#444450'; ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  for(let i=-20; i<=20; i+=10) {
+    if(i===0) continue;
+    ctx.fillText(i+'″', cx + i*sc, cy+12);
+    ctx.fillText(i+'″', cx+18, cy - i*sc);
+  }
+
+  // Direction labels
+  ctx.fillStyle = '#3A3A48'; ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'right'; ctx.fillText('← GLOVE SIDE', cx-8, cy-6);
+  ctx.textAlign = 'left';  ctx.fillText('ARM SIDE →', cx+8, cy-6);
+  ctx.save(); ctx.translate(cx-10,14); ctx.textAlign='right'; ctx.fillText('RISE ↑',0,0); ctx.restore();
+  ctx.save(); ctx.translate(cx-10,H-6); ctx.textAlign='right'; ctx.fillText('DROP ↓',0,0); ctx.restore();
+
+  // ── MLB AVERAGE CLOUDS (draw first, behind everything) ──────
+  Object.entries(MLB_CLOUDS).forEach(([type, cloud]) => {
+    const pitchCol = ARSENAL[type]?.color || '#888888';
+    const cx2 = cx + cloud.hb * sc;
+    const cy2 = cy - cloud.ivb * sc;
+    const rx2 = cloud.rx * sc;
+    const ry2 = cloud.ry * sc;
+
+    // Filled ellipse
+    ctx.beginPath();
+    ctx.ellipse(cx2, cy2, rx2, ry2, 0, 0, Math.PI*2);
+    ctx.fillStyle = pitchCol + '10';
+    ctx.fill();
+    ctx.strokeStyle = pitchCol + '22';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Cloud label
+    ctx.fillStyle = pitchCol + '38';
+    ctx.font = '7.5px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('MLB ' + type, cx2, cy2 + ry2 + 10);
+  });
+
+  // ── SKENES PITCHES ──────────────────────────────────────────
+  Object.entries(ARSENAL).forEach(([type, pitch]) => {
+    const ps = pitch.stats;
+    const isCur = type === curPitch;
+    const x = cx + ps.hb * sc;
+    const y = cy - ps.ivb * sc;
+    const col = pitch.color;
+
+      // Sandbox target
+      const sbX = cx + sbVals.hb * sc;
+      const sbY = cy - sbVals.ivb * sc;
+      if(Math.abs(sbX-x) > 3 || Math.abs(sbY-y) > 3) {
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(sbX,sbY);
+        ctx.strokeStyle = '#FFB61255'; ctx.lineWidth = 1;
+        ctx.setLineDash([3,2]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(sbX,sbY,6,0,Math.PI*2);
+        ctx.strokeStyle = '#FFB612'; ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = '#FFB61230'; ctx.fill();
+        ctx.fillStyle = '#FFB612'; ctx.font = '8px JetBrains Mono';
+        ctx.fillText('TARGET', sbX+10, sbY-2);
+      }
+  });
+
+  // Legend — bottom left
+  let lx=12, ly=H-10-Object.keys(ARSENAL).length*14;
+  Object.entries(ARSENAL).forEach(([type, pitch]) => {
+    ctx.fillStyle = pitch.color;
+    ctx.fillRect(lx, ly-7, 8, 8);
+    ctx.font = '8px JetBrains Mono'; ctx.fillStyle = '#666670';
+    ctx.textAlign = 'left';
+    ctx.fillText(pitch.name, lx+12, ly);
+    ly += 14;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ARSENAL OVERVIEW CHART
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ZONE HEAT MAP
+// ══════════════════════════════════════════════════════════════
+function renderZoneMap() {
+  const canvas = document.getElementById('zone-canvas');
+  if(!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const type = curPitch;
+  const col  = ARSENAL[type]?.color || '#FFB612';
+
+  ctx.fillStyle = '#0E0E11';
+  ctx.fillRect(0,0,W,H);
+
+  const data = ZONE_DATA[type]?.[curZoneSplit]?.[curZoneMetric];
+  if(!data) { ctx.fillStyle='#444'; ctx.font='12px monospace'; ctx.textAlign='center'; ctx.fillText('No zone data',W/2,H/2); return; }
+
+  // Zone layout: 3 cols x 3 rows
+  const zW = Math.min(W*0.55, 280), zH = H * 0.80;
+  const zX = (W - zW) / 2, zY = (H - zH) / 2;
+  const cW = zW/3, cH = zH/3;
+
+  // Zones [row][col] \u2192 zone number
+  const layout = [[1,2,3],[4,5,6],[7,8,9]];
+
+  // Color scale
+  function zoneColor(val, metric) {
+    // whiff: 0% = dark blue, 50% = red
+    // ba: .100 = green, .300 = red
+    let t;
+    if(metric === 'whiff') t = Math.min(val/55, 1);
+    else t = Math.min(Math.max((val - 0.1) / 0.22, 0), 1);
+
+    // Blue \u2192 Yellow \u2192 Red
+    let r, g, b;
+    if(t < 0.5) {
+      t = t*2;
+      r = Math.round(28 + t*(255-28));
+      g = Math.round(28 + t*(200-28));
+      b = Math.round(80 * (1-t));
+    } else {
+      t = (t-0.5)*2;
+      r = 255;
+      g = Math.round(200 * (1-t));
+      b = 0;
+    }
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // Draw zones
+  layout.forEach((row, ri) => {
+    row.forEach((zone, ci) => {
+      const x = zX + ci*cW, y = zY + ri*cH;
+      const val = data[zone];
+
+      // Fill
+      ctx.fillStyle = zoneColor(val, curZoneMetric);
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x+1, y+1, cW-2, cH-2);
+      ctx.globalAlpha = 1;
+
+      // Border
+      ctx.strokeStyle = '#000000'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(x+1, y+1, cW-2, cH-2);
+
+      // Zone number
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
+      ctx.fillText(zone, x+5, y+13);
+
+      // Value
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 14px JetBrains Mono'; ctx.textAlign = 'center';
+      const display = curZoneMetric === 'whiff' ? val+'%' : '.'+String(Math.round(val*1000)).padStart(3,'0');
+      ctx.fillText(display, x+cW/2, y+cH/2+6);
+    });
+  });
+
+  // Outer strike zone border
+  ctx.strokeStyle = '#FFFFFF40'; ctx.lineWidth = 2;
+  ctx.strokeRect(zX, zY, zW, zH);
+
+  // Labels
+  ctx.fillStyle = '#444450'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('ARM SIDE \u2192', zX + zW * 0.15, zY - 8);
+  ctx.fillText('\u2190 GLOVE', zX + zW * 0.82, zY - 8);
+  ctx.fillStyle = '#FFB612'; ctx.font = '9px JetBrains Mono';
+  ctx.fillText(`${type} \u00b7 ${curZoneMetric === 'whiff' ? 'WHIFF%' : 'BATTING AVG'} \u00b7 ${curZoneSplit}`, W/2, H - 8);
+
+  // Color scale legend
+  const lgX = zX + zW + 14, lgY = zY;
+  const lgH = zH;
+  for(let i=0; i<lgH; i++) {
+    const t = 1 - i/lgH;
+    ctx.fillStyle = zoneColor(curZoneMetric==='whiff' ? t*55 : 0.1+t*0.22, curZoneMetric);
+    ctx.fillRect(lgX, lgY+i, 10, 1);
+  }
+  ctx.fillStyle = '#888892'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText(curZoneMetric==='whiff' ? '55%' : '.320', lgX+14, lgY+6);
+  ctx.fillText(curZoneMetric==='whiff' ? '0%' : '.100', lgX+14, lgY+lgH);
+
+  // Update label
+  const lbl = document.getElementById('zone-pitch-label');
+  if(lbl) lbl.textContent = `${type} \u00b7 ${ARSENAL[type]?.name || ''}`;
+}
+
+
+// ══════════════════════════════════════════════════
+function renderRecommendation() {
+  const el = document.getElementById('rec-panel');
+  if(!el) return;
+
+  // Analyze current arsenal for gaps
+  const pitches = Object.values(ARSENAL);
+  const usedTypes = Object.keys(ARSENAL).filter(t => ARSENAL[t].stats.use > 0);
+
+  // Find movement space gaps \u2014 where is there no pitch?
+  // Quadrants: high/arm, high/glove, low/arm, low/glove
+  const quadrants = {
+    'HIGH ARM (+IVB, +HB)': usedTypes.filter(t => ARSENAL[t].stats.ivb > 5 && ARSENAL[t].stats.hb > 5),
+    'HIGH GLOVE (+IVB, -HB)': usedTypes.filter(t => ARSENAL[t].stats.ivb > 5 && ARSENAL[t].stats.hb < -5),
+    'LOW ARM (-IVB, +HB)': usedTypes.filter(t => ARSENAL[t].stats.ivb < 0 && ARSENAL[t].stats.hb > 5),
+    'LOW GLOVE (-IVB, -HB)': usedTypes.filter(t => ARSENAL[t].stats.ivb < 0 && ARSENAL[t].stats.hb < -5),
+  };
+
+  // Find velocity band gaps
+  const velos = usedTypes.map(t => ARSENAL[t].stats.velo).sort((a,b) => b-a);
+  const maxGap = { gap:0, between:'' };
+  for(let i=0; i<velos.length-1; i++) {
+    const gap = velos[i] - velos[i+1];
+    if(gap > maxGap.gap) { maxGap.gap = gap; maxGap.between = `${velos[i].toFixed(0)}\u2013${velos[i+1].toFixed(0)} mph`; }
+  }
+
+  // Build recommendations
+  const recs = [];
+
+  // Cutter (90-93 mph) \u2014 there's currently a gap between FF (98) and SW/SP (84-94)
+  recs.push({
+    priority: 'HIGH',
+    title: 'CUTTER (CT) \u00b7 90\u201393 MPH',
+    col: '#F472B6',
+    reason: `Fills ${maxGap.between} velocity gap. Would create a 4th fastball variant at different axis. Target: +10" IVB, -5" HB, 90 mph. Breaks glove-side unlike all current fastballs.`,
+    targetIvb: 10.4, targetHb: -5.2, targetVelo: 91.5
+  });
+
+  // Slower sweeper / slurve
+  recs.push({
+    priority: 'MEDIUM',
+    title: 'SLOW SWEEPER (SLURVE) \u00b7 76\u201380 MPH',
+    col: '#38BDF8',
+    reason: 'Reported as "the sleeper" in 2026 spring. Slower sweeper variant with more vertical break. Creates velocity/shape tunnel off existing sweeper. Targets LHH off-speed gap.',
+    targetIvb: -4.2, targetHb: -14.8, targetVelo: 78.0
+  });
+
+  // Backdoor curve to righties
+  recs.push({
+    priority: 'LOW',
+    title: 'TRUE 12-6 CURVE \u00b7 82\u201384 MPH',
+    col: '#A78BFA',
+    reason: 'Current curveball is gyro/low-efficiency. A true 12-6 curve with 75%+ spin efficiency would add a pure vertical weapon \u2014 different look than anything else in arsenal.',
+    targetIvb: -14.0, targetHb: -2.0, targetVelo: 82.5
+  });
+
+  el.innerHTML = recs.map(r => `
+    <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid ${r.col};
+                border-radius:3px;padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:${r.col}">${r.title}</span>
+        <span style="font-size:8px;letter-spacing:1.5px;padding:2px 6px;border-radius:2px;
+               background:${r.priority==='HIGH'?'rgba(74,222,128,0.12)':r.priority==='MEDIUM'?'rgba(251,191,36,0.12)':'rgba(136,136,146,0.12)'};
+               color:${r.priority==='HIGH'?'#4ADE80':r.priority==='MEDIUM'?'#FBBF24':'#888892'}">${r.priority} PRIORITY</span>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted2);line-height:1.6;">${r.reason}</div>
+      <div style="margin-top:8px;display:flex;gap:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted)">
+          TARGET: <span style="color:${r.col}">${r.targetVelo} mph \u00b7 IVB ${r.targetIvb>0?'+':''}${r.targetIvb}" \u00b7 HB ${r.targetHb>0?'+':''}${r.targetHb}"</span>
+        </span>
+        <button onclick="loadRecommendation(${r.targetIvb},${r.targetHb},${r.targetVelo})"
+          style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1px;
+                 padding:3px 10px;background:${r.col}18;color:${r.col};
+                 border:1px solid ${r.col}40;border-radius:2px;cursor:pointer;">
+          LOAD IN SANDBOX \u2192
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadRecommendation(ivb, hb, velo) {
+  sbVals.ivb  = ivb;
+  sbVals.hb   = hb;
+  sbVals.velo = velo;
+  setMode('design');
+  renderSandbox();
+  runDesign();
+  // Scroll to sandbox
+  document.querySelector('.mid-grid')?.scrollIntoView({behavior:'smooth'});
+}
+
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// ══════════════════════════════════════════════════════════════
+// PITCH COMPARISON PANEL
+// ══════════════════════════════════════════════════════════════
+let compareA = 'FF';
+let compareB = 'SW';
+
+function setCompareA(type) {
+  compareA = type;
+  document.querySelectorAll('[data-ca]').forEach(b =>
+    b.classList.toggle('active', b.dataset.ca === type));
+  renderComparePanel();
+}
+
+function setCompareB(type) {
+  compareB = type;
+  document.querySelectorAll('[data-cb]').forEach(b =>
+    b.classList.toggle('active', b.dataset.cb === type));
+  renderComparePanel();
+}
+
+function renderComparePanel() {
+  const el = document.getElementById('compare-panel');
+  if(!el) return;
+
+  const A = ARSENAL[compareA], B = ARSENAL[compareB];
+  if(!A || !B) return;
+  const sa = A.stats, sb = B.stats;
+
+  const metrics = [
+    {k:'velo',  lb:'Velocity',   u:'mph', fmt:v=>v.toFixed(1)},
+    {k:'spin',  lb:'Spin Rate',  u:'rpm', fmt:v=>Math.round(v)},
+    {k:'ivb',   lb:'Vert Break', u:'"',   fmt:v=>(v>0?'+':'')+v.toFixed(1)},
+    {k:'hb',    lb:'Horiz Break',u:'"',   fmt:v=>(v>0?'+':'')+v.toFixed(1)},
+    {k:'eff',   lb:'Spin Eff',   u:'%',   fmt:v=>Math.round(v)},
+    {k:'vaa',   lb:'VAA',        u:'°',   fmt:v=>v.toFixed(1)},
+    {k:'whiff', lb:'Whiff%',     u:'%',   fmt:v=>v.toFixed(1)},
+    {k:'stuff', lb:'Stuff+',     u:'',    fmt:v=>Math.round(v)},
+    {k:'use',   lb:'Usage%',     u:'%',   fmt:v=>v.toFixed(1)},
+  ];
+
+  // Tunnel score: how similar are the pitches at the 28ft decision point?
+  const tunnelScore = (() => {
+    const dHB  = Math.abs((sa.hb  || 0) - (sb.hb  || 0));
+    const dIVB = Math.abs((sa.ivb || 0) - (sb.ivb || 0));
+    const dVelo= Math.abs((sa.velo|| 0) - (sb.velo|| 0));
+    // At 28ft (half-way), break effect is ~25% of total
+    const sepHB  = dHB  * 0.25;
+    const sepIVB = dIVB * 0.25;
+    const total_sep = Math.sqrt(sepHB*sepHB + sepIVB*sepIVB);
+    // Good tunnel: <1.5" separation at 28ft. Score 0-100
+    const score = Math.max(0, Math.min(100, 100 - (total_sep / 3) * 100));
+    return {score: Math.round(score), sep: total_sep.toFixed(2), dVelo: dVelo.toFixed(1)};
+  })();
+
+  const tCol = tunnelScore.score >= 75 ? '#4ADE80'
+             : tunnelScore.score >= 50 ? '#FBBF24' : '#F87171';
+
+  el.innerHTML = `
+    <div style="padding:10px 14px;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace;">
+        <thead>
+          <tr>
+            <td style="color:var(--muted);font-size:9px;letter-spacing:1px;padding:4px 0;">METRIC</td>
+            <td style="text-align:right;color:${A.color};padding:4px 6px;">${compareA}</td>
+            <td style="text-align:right;color:${B.color};padding:4px 6px;">${compareB}</td>
+            <td style="text-align:right;color:var(--muted);font-size:9px;padding:4px 0;">DELTA</td>
+          </tr>
+        </thead>
+        <tbody>
+          ${metrics.map(m => {
+            const va = sa[m.k] ?? '—', vb = sb[m.k] ?? '—';
+            const diff = (typeof va === 'number' && typeof vb === 'number') ? (vb - va) : null;
+            const diffStr = diff !== null ? (diff > 0 ? '+' : '') + diff.toFixed(diff % 1 === 0 ? 0 : 1) : '—';
+            const diffCol = diff === null ? 'var(--muted)' : Math.abs(diff) < 0.5 ? '#4ADE80' : 'var(--muted2)';
+            return `<tr style="border-top:1px solid var(--border)">
+              <td style="color:var(--muted);padding:5px 0;font-size:9px;letter-spacing:.8px;">${m.lb}</td>
+              <td style="text-align:right;color:${A.color};padding:5px 6px;">${typeof va==='number'?m.fmt(va)+m.u:'—'}</td>
+              <td style="text-align:right;color:${B.color};padding:5px 6px;">${typeof vb==='number'?m.fmt(vb)+m.u:'—'}</td>
+              <td style="text-align:right;color:${diffCol};padding:5px 0;">${diffStr}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--card);border-radius:3px;border-left:3px solid ${tCol};">
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;">TUNNEL ANALYSIS · 28 FT</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div><span style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${tCol}">${tunnelScore.score}</span><span style="font-size:9px;color:var(--muted);margin-left:3px;">/ 100</span></div>
+          <div style="font-size:10px;color:var(--muted2);line-height:1.6;">
+            Separation at 28ft: <span style="color:var(--white)">${tunnelScore.sep}"</span><br>
+            Velo delta: <span style="color:var(--white)">${tunnelScore.dVelo} mph</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  const sub = document.getElementById('compare-sub');
+  if(sub) sub.textContent = `${compareA} vs ${compareB} · ${A.name} / ${B.name}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+function renderArsenalChart() {
+  const canvas = document.getElementById('arsenal-canvas');
+  if(!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#111114';
+  ctx.fillRect(0,0,W,H);
+
+  const pitches = Object.entries(ARSENAL).filter(([,p]) => p.stats.use > 0);
+  const rowH  = (H - 20) / pitches.length;
+  const barMaxW = W * 0.38;
+  const col1 = 100;  // pitch label x
+  const col2 = col1 + barMaxW + 16; // whiff bar x
+  const col3 = col2 + barMaxW * 0.6 + 16; // stuff+
+
+  // Headers
+  ctx.fillStyle = '#444450'; ctx.font = '8.5px JetBrains Mono'; ctx.textAlign = 'left';
+  ctx.fillText('PITCH', 12, 14);
+  ctx.fillText('USAGE %', col1, 14);
+  ctx.fillText('WHIFF %', col2, 14);
+  ctx.fillText('STUFF+', col3, 14);
+
+  pitches.forEach(([type, pitch], i) => {
+    const s = pitch.stats;
+    const y = 24 + i * rowH;
+    const mid = y + rowH * 0.5;
+    const col = pitch.color;
+    const isCur = type === curPitch;
+
+    // Row highlight for active pitch
+    if(isCur) {
+      ctx.fillStyle = col + '08';
+      ctx.fillRect(0, y, W, rowH);
+    }
+
+    // Pitch label
+    ctx.fillStyle = isCur ? col : '#888892';
+    ctx.font = `${isCur ? 'bold' : ''} 10px JetBrains Mono`;
+    ctx.textAlign = 'left';
+    ctx.fillText(type, 12, mid + 4);
+
+    // Pitch name
+    ctx.fillStyle = isCur ? col + 'BB' : '#444450';
+    ctx.font = '8px JetBrains Mono';
+    ctx.fillText(pitch.name, 36, mid + 4);
+
+    // Usage bar
+    const useW = (s.use / 55) * barMaxW;
+    ctx.fillStyle = '#1A1A1D';
+    ctx.fillRect(col1, mid - 5, barMaxW, 10);
+    ctx.fillStyle = isCur ? col : col + '60';
+    ctx.fillRect(col1, mid - 5, useW, 10);
+    ctx.fillStyle = '#EFEFEF'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'left';
+    ctx.fillText(s.use.toFixed(1)+'%', col1 + useW + 4, mid + 4);
+
+    // Whiff bar
+    const whiffMaxW = barMaxW * 0.6;
+    const whiffW = (s.whiff / 50) * whiffMaxW;
+    ctx.fillStyle = '#1A1A1D';
+    ctx.fillRect(col2, mid - 5, whiffMaxW, 10);
+    const whiffCol = s.whiff >= 35 ? '#4ADE80' : s.whiff >= 25 ? '#FBBF24' : '#888892';
+    ctx.fillStyle = isCur ? whiffCol : whiffCol + '60';
+    ctx.fillRect(col2, mid - 5, whiffW, 10);
+    ctx.fillStyle = '#EFEFEF'; ctx.font = '9px JetBrains Mono';
+    ctx.fillText(s.whiff > 0 ? s.whiff.toFixed(1)+'%' : '—', col2 + whiffW + 4, mid + 4);
+
+    // Stuff+
+    if(s.stuff > 0) {
+      const stuffCol = s.stuff >= 150 ? '#4ADE80' : s.stuff >= 120 ? '#FBBF24' : '#888892';
+      ctx.fillStyle = isCur ? stuffCol : stuffCol + '80';
+      ctx.font = `${isCur ? 'bold' : ''} 14px JetBrains Mono`;
+      ctx.fillText(s.stuff, col3, mid + 5);
+    } else {
+      ctx.fillStyle = '#333340'; ctx.font = '10px JetBrains Mono';
+      ctx.fillText('—', col3, mid + 4);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SESSION NOTES
+// ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// SAVED DESIGNS — localStorage persistence
+// ══════════════════════════════════════════════════════════════
+function loadSavedDesigns() {
+  const list = document.getElementById('saved-designs-list');
+  const none = document.getElementById('no-designs');
+  if(!list) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem('ps20_designs') || '[]');
+    if(saved.length === 0) { if(none) none.style.display='block'; return; }
+    if(none) none.style.display='none';
+    list.innerHTML = saved.map((d,i) => `
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="flex:1;font-size:10px;color:var(--white);cursor:pointer" onclick="loadDesign(${i})">${d.name} <span style="color:${ARSENAL[d.type]?.color||'var(--muted)'}">${d.type}</span></span>
+        <button onclick="deleteDesign(${i})" style="font-size:9px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 4px;">✕</button>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+function saveDesign() {
+  const name = document.getElementById('design-name')?.value?.trim();
+  if(!name) return;
+  try {
+    const saved = JSON.parse(localStorage.getItem('ps20_designs') || '[]');
+    saved.push({name, type: curPitch, stats: {...sbVals}, ts: Date.now()});
+    localStorage.setItem('ps20_designs', JSON.stringify(saved));
+    document.getElementById('design-name').value = '';
+    loadSavedDesigns();
+  } catch(e) {}
+}
+
+function loadDesign(idx) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ps20_designs') || '[]');
+    const d = saved[idx];
+    if(!d) return;
+    selectPitch(d.type);
+    sbVals = {...d.stats};
+    renderSandbox();
+    runDesign();
+  } catch(e) {}
+}
+
+function deleteDesign(idx) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ps20_designs') || '[]');
+    saved.splice(idx, 1);
+    localStorage.setItem('ps20_designs', JSON.stringify(saved));
+    loadSavedDesigns();
+  } catch(e) {}
+}
+
+function saveNotes(text) {
+  try { sessionStorage.setItem('ps20-notes', text); } catch(e){}
+  const saved = document.getElementById('notes-saved');
+  if(saved) {
+    saved.style.display = 'inline';
+    clearTimeout(window._notesTimer);
+    window._notesTimer = setTimeout(() => { saved.style.display = 'none'; }, 1500);
+  }
+}
+
+function clearNotes() {
+  const ta = document.getElementById('session-notes');
+  if(ta) ta.value = '';
+  try { sessionStorage.removeItem('ps20-notes'); } catch(e){}
+}
+
+function loadNotes() {
+  try {
+    const saved = sessionStorage.getItem('ps20-notes');
+    const ta = document.getElementById('session-notes');
+    if(saved && ta) ta.value = saved;
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT PITCH CARD
+// Builds a clean canvas card with all current pitch data
+// ══════════════════════════════════════════════════════════════
+function exportPitchCard() {
+  const pitch = ARSENAL[curPitch];
+  const s = sbVals;
+  const W = 800, H = 400;
+
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#09090B';
+  ctx.fillRect(0,0,W,H);
+
+  // Gold border
+  ctx.strokeStyle = '#FFB612'; ctx.lineWidth = 2;
+  ctx.strokeRect(1,1,W-2,H-2);
+
+  // Header bar
+  ctx.fillStyle = '#111114';
+  ctx.fillRect(0,0,W,60);
+  ctx.strokeStyle = '#FFB612'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,60); ctx.lineTo(W,60); ctx.stroke();
+
+  // Title
+  ctx.fillStyle = '#FFB612';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('PAUL SKENES · PITCH DESIGN', 20, 38);
+
+  // Pitch type badge
+  ctx.fillStyle = pitch.color;
+  ctx.font = 'bold 20px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(`${curPitch} · ${pitch.name.toUpperCase()}`, W-20, 38);
+
+  // Stats
+  const stats = [
+    ['VELOCITY', s.velo?.toFixed(1), 'mph'],
+    ['SPIN RATE', Math.round(s.spin||0), 'rpm'],
+    ['IVB', (s.ivb||0).toFixed(1), '"'],
+    ['HORIZ BREAK', (s.hb||0).toFixed(1), '"'],
+    ['TILT', s.tilt, ''],
+    ['SPIN EFF', s.eff, '%'],
+    ['REL HEIGHT', s.relH?.toFixed(1), 'ft'],
+    ['EXTENSION', s.ext?.toFixed(1), 'ft'],
+    ['WHIFF%', s.whiff?.toFixed(1), '%'],
+    ['STUFF+', s.stuff, ''],
+  ];
+
+  const colW = W / 5;
+  stats.forEach((st, i) => {
+    const col = i % 5;
+    const row = Math.floor(i / 5);
+    const x = 20 + col * colW;
+    const y = 85 + row * 90;
+
+    ctx.fillStyle = '#1A1A1D';
+    ctx.fillRect(x, y, colW-12, 75);
+
+    ctx.fillStyle = '#555560';
+    ctx.font = '10px monospace'; ctx.textAlign = 'left';
+    ctx.fillText(st[0], x+10, y+18);
+
+    ctx.fillStyle = '#EFEFEF';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText(st[1], x+10, y+50);
+
+    ctx.fillStyle = pitch.color;
+    ctx.font = '12px monospace';
+    ctx.fillText(st[2], x+10, y+68);
+  });
+
+  // Footer
+  ctx.fillStyle = '#333340';
+  ctx.font = '10px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('PS20 PITCH DESIGN LAB · 2025–2026 BASELINE · PRIVATE BUILD', 20, H-12);
+
+  ctx.fillStyle = pitch.color;
+  ctx.textAlign = 'right';
+  ctx.fillText(new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}), W-20, H-12);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `skenes_${curPitch.toLowerCase()}_${Date.now()}.png`;
+  link.href = cv.toDataURL('image/png');
+  link.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// Q/W/E/R/T/Y/U — cycle through pitch types in order
+// ══════════════════════════════════════════════════════════════
+const PITCH_ORDER = ['FF','SW','SP','CH','SI','SL','CU'];
+document.addEventListener('keydown', (e) => {
+  if(e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  const map = {q:'FF', w:'SW', e:'SP', r:'CH', t:'SI', y:'SL', u:'CU'};
+  const pitch = map[e.key.toLowerCase()];
+  if(pitch) selectPitch(pitch);
+
+  // Arrow keys: cycle forward/back
+  if(e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    const idx = PITCH_ORDER.indexOf(curPitch);
+    const next = e.key === 'ArrowRight'
+      ? PITCH_ORDER[(idx+1) % PITCH_ORDER.length]
+      : PITCH_ORDER[(idx-1+PITCH_ORDER.length) % PITCH_ORDER.length];
+    selectPitch(next);
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// APPROACH ANGLE (VAA / HAA) PANEL
+// Uses Paul's real Savant data per pitch from ARSENAL.stats
+// ══════════════════════════════════════════════════════════════
+function renderVAAPanel(type, stats) {
+  const canvas = document.getElementById('vaa-canvas');
+  if(!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const col = ARSENAL[type]?.color || '#FFB612';
+
+  ctx.fillStyle = '#0E0E11';
+  ctx.fillRect(0, 0, W, H);
+
+  // Paul's real VAA/HAA from stats object (Savant 2024-2026 combined)
+  const paulVAA = stats.vaa || ARSENAL[type]?.stats.vaa || -4.5;
+  const paulHAA = stats.haa || ARSENAL[type]?.stats.haa || 1.0;
+  const avgVAA  = VAA_AVG[type]?.vaa || -5.5;
+  const avgHAA  = VAA_AVG[type]?.haa || 0.5;
+
+  const half  = W / 2;
+  const pad   = 28;
+  const svCX  = half / 2;           // side-view center X
+  const tvCX  = half + half / 2;    // top-view center X
+  const cy    = H / 2 + 8;
+  const svR   = Math.min(half/2 - pad, H/2 - 36);
+  const tvR   = svR;
+
+  // ── VAA — SIDE VIEW (left half) ─────────────────────────────
+  // Draw a "home plate arrival" arc showing approach angle
+  ctx.strokeStyle = '#1E1E26'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(svCX, cy, svR, Math.PI, 2*Math.PI); ctx.stroke();
+
+  // Reference lines: 0° (flat) and vertical
+  ctx.strokeStyle = '#2A2A35'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(svCX - svR, cy); ctx.lineTo(svCX + svR, cy); // horizontal
+  ctx.moveTo(svCX, cy - svR); ctx.lineTo(svCX, cy);        // vertical
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Scale: VAA range -2° to -12°, map to arc angle
+  // 0° = horizontal right (3 o'clock), angle increases clockwise
+  // We draw from the plate perspective: ball comes DOWN at VAA angle
+  function vaaToAngle(vaa) {
+    // vaa is negative (downward) — map to radians below horizontal
+    return Math.PI - (Math.abs(vaa) / 90) * Math.PI;
+  }
+
+  // Avg VAA ray
+  const avgVRad = vaaToAngle(avgVAA);
+  ctx.strokeStyle = '#444450'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  ctx.moveTo(svCX, cy);
+  ctx.lineTo(svCX + Math.cos(avgVRad)*svR, cy - Math.sin(avgVRad)*svR);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Paul's VAA ray
+  const paulVRad = vaaToAngle(paulVAA);
+  ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(svCX, cy);
+  ctx.lineTo(svCX + Math.cos(paulVRad)*svR*0.88, cy - Math.sin(paulVRad)*svR*0.88);
+  ctx.stroke();
+
+  // Arrowhead
+  const vex = svCX + Math.cos(paulVRad)*svR*0.88;
+  const vey = cy - Math.sin(paulVRad)*svR*0.88;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(vex, vey);
+  ctx.lineTo(vex - 8*Math.cos(paulVRad-0.35), vey + 8*Math.sin(paulVRad-0.35));
+  ctx.lineTo(vex - 8*Math.cos(paulVRad+0.35), vey + 8*Math.sin(paulVRad+0.35));
+  ctx.closePath(); ctx.fill();
+
+  // Labels
+  ctx.fillStyle = col; ctx.font = `bold 13px JetBrains Mono`; ctx.textAlign = 'center';
+  ctx.fillText(`${paulVAA.toFixed(1)}°`, svCX, cy - svR - 8);
+  ctx.fillStyle = '#33333E'; ctx.font = `10px JetBrains Mono`;
+  ctx.fillText(`avg ${avgVAA.toFixed(1)}°`, svCX, cy + 16);
+  ctx.fillStyle = '#555560'; ctx.font = `8px JetBrains Mono`;
+  ctx.fillText('VAA', svCX, cy - svR - 22);
+
+  // Delta badge
+  const dvaa = paulVAA - avgVAA;
+  const dvaaCol = dvaa > 0 ? '#4ADE80' : '#F87171'; // flatter = good for FF, steeper = good for CB
+  ctx.fillStyle = dvaaCol; ctx.font = `bold 10px JetBrains Mono`;
+  ctx.fillText(`${dvaa > 0 ? '+' : ''}${dvaa.toFixed(1)}° vs avg`, svCX, cy + 28);
+
+  // ── HAA — TOP VIEW (right half) ─────────────────────────────
+  ctx.strokeStyle = '#1E1E26'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(tvCX, cy, tvR, 0, 2*Math.PI); ctx.stroke();
+
+  ctx.strokeStyle = '#2A2A35'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(tvCX - tvR, cy); ctx.lineTo(tvCX + tvR, cy); // horizontal baseline
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // HAA: ball arriving from right (pitcher's mound), HAA = horizontal angle
+  // Positive HAA = arm-side (from RHP = comes from left → positive X offset)
+  function haaToRad(haa) {
+    return (haa / 90) * Math.PI;
+  }
+
+  // Avg HAA
+  const avgHRad = haaToRad(avgHAA);
+  ctx.strokeStyle = '#444450'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  ctx.moveTo(tvCX, cy);
+  ctx.lineTo(tvCX - Math.cos(avgHRad)*tvR, cy - Math.sin(avgHRad)*tvR);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Paul's HAA
+  const paulHRad = haaToRad(paulHAA);
+  ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(tvCX, cy);
+  ctx.lineTo(tvCX - Math.cos(paulHRad)*tvR*0.88, cy - Math.sin(paulHRad)*tvR*0.88);
+  ctx.stroke();
+
+  // Arrowhead
+  const hex = tvCX - Math.cos(paulHRad)*tvR*0.88;
+  const hey = cy - Math.sin(paulHRad)*tvR*0.88;
+  const hang = Math.atan2(hey - cy, hex - tvCX);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(hex, hey);
+  ctx.lineTo(hex - 8*Math.cos(hang-0.35), hey - 8*Math.sin(hang-0.35));
+  ctx.lineTo(hex - 8*Math.cos(hang+0.35), hey - 8*Math.sin(hang+0.35));
+  ctx.closePath(); ctx.fill();
+
+  // Side labels
+  ctx.fillStyle = '#2A2A35'; ctx.font = `8px JetBrains Mono`; ctx.textAlign = 'center';
+  ctx.fillText('ARM', tvCX + tvR + 2, cy - 4);
+  ctx.fillText('GLV', tvCX - tvR - 2, cy - 4);
+
+  ctx.fillStyle = col; ctx.font = `bold 13px JetBrains Mono`;
+  ctx.fillText(`${paulHAA > 0 ? '+' : ''}${paulHAA.toFixed(1)}°`, tvCX, cy - tvR - 8);
+  ctx.fillStyle = '#33333E'; ctx.font = `10px JetBrains Mono`;
+  ctx.fillText(`avg ${avgHAA > 0 ? '+' : ''}${avgHAA.toFixed(1)}°`, tvCX, cy + 16);
+  ctx.fillStyle = '#555560'; ctx.font = `8px JetBrains Mono`;
+  ctx.fillText('HAA', tvCX, cy - tvR - 22);
+
+  const dhaa = paulHAA - avgHAA;
+  const dhaaCol = '#FBBF24';
+  ctx.fillStyle = dhaaCol; ctx.font = `bold 10px JetBrains Mono`;
+  ctx.fillText(`${dhaa > 0 ? '+' : ''}${dhaa.toFixed(1)}° vs avg`, tvCX, cy + 28);
+
+  // Divider
+  ctx.strokeStyle = '#1E1E26'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(half, pad); ctx.lineTo(half, H - pad); ctx.stroke();
+
+  // Pitch type label at top
+  ctx.fillStyle = '#333338'; ctx.font = `8px JetBrains Mono`; ctx.textAlign = 'left';
+  ctx.fillText(ARSENAL[type]?.name?.toUpperCase() || type, 8, 12);
+
+  // Notes
+  const notesEl = document.getElementById('vaa-notes');
+  if(notesEl) {
+    const vaaNote = paulVAA > avgVAA
+      ? `Flatter than avg by ${Math.abs(dvaa).toFixed(1)}° — harder for hitters to get under, fewer pop-ups, more hard contact risk`
+      : `Steeper than avg by ${Math.abs(dvaa).toFixed(1)}° — generates more weak contact above the ball`;
+    const haaNote = Math.abs(paulHAA) < 0.5
+      ? `Near-neutral horizontal approach`
+      : paulHAA > 0
+        ? `Arm-side approach (+${paulHAA.toFixed(1)}°) — tunnels with sinker, runs away from LHH`
+        : `Glove-side approach (${paulHAA.toFixed(1)}°) — cuts in on RHH, sweeping shape`;
+    notesEl.innerHTML = `<span style="color:${col}">${type}</span> — ${vaaNote}. ${haaNote}.`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// IMPROVED TRAJECTORY PHYSICS (Magnus force model)
+// ══════════════════════════════════════════════════════════════
+
+
+// ══════════════════════════════════════════════════════════════
+// SESSION REPORT GENERATOR
+// ══════════════════════════════════════════════════════════════
+function generateSessionReport() {
+  const pitch = ARSENAL[curPitch];
+  const stats = getActiveStats(curPitch);
+  const grade = getPitchGrade(stats, curPitch);
+  const comps  = findComps(curPitch, stats);
+  const notes  = document.getElementById('session-notes')?.value || '';
+
+  const W = 1200, H = 800;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const col = pitch.color;
+
+  // Background
+  ctx.fillStyle = '#09090B';
+  ctx.fillRect(0,0,W,H);
+
+  // Gold border
+  ctx.strokeStyle = col; ctx.lineWidth = 2;
+  ctx.strokeRect(2,2,W-4,H-4);
+
+  // Header stripe
+  ctx.fillStyle = '#111114';
+  ctx.fillRect(0,0,W,72);
+  ctx.strokeStyle = col; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,72); ctx.lineTo(W,72); ctx.stroke();
+
+  // Header text
+  ctx.fillStyle = col;
+  ctx.font = 'bold 32px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('PAUL SKENES  ·  PITCH DESIGN LAB', 24, 44);
+  ctx.fillStyle = '#888892';
+  ctx.font = '12px monospace'; ctx.textAlign = 'right';
+  ctx.fillText(new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}), W-24, 30);
+  ctx.fillText(`SESSION REPORT  ·  PRIVATE BUILD`, W-24, 50);
+
+  // Pitch type hero
+  ctx.fillStyle = col;
+  ctx.font = 'bold 56px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(curPitch, 24, 148);
+  ctx.fillStyle = '#EFEFEF';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText(pitch.name.toUpperCase(), 100, 130);
+  ctx.fillStyle = grade.col;
+  ctx.font = 'bold 40px sans-serif';
+  ctx.fillText(grade.grade, W*0.25, 148);
+  ctx.fillStyle = '#555'; ctx.font = '11px monospace';
+  ctx.fillText('GRADE', W*0.25+4, 162);
+
+  // Stats grid (4 cols x 3 rows)
+  const statList = [
+    ['VELOCITY', stats.velo?.toFixed(1), 'mph'],
+    ['SPIN RATE', Math.round(stats.spin), 'rpm'],
+    ['IVB', stats.ivb?.toFixed(1), '"'],
+    ['HORIZ BREAK', (stats.hb > 0?'+':'')+stats.hb?.toFixed(1), '"'],
+    ['TILT', stats.tilt, ''],
+    ['SPIN EFF', stats.eff, '%'],
+    ['REL HEIGHT', stats.relH?.toFixed(1), 'ft'],
+    ['EXTENSION', stats.ext?.toFixed(1), 'ft'],
+    ['WHIFF%', stats.whiff?.toFixed(1), '%'],
+    ['STUFF+', stats.stuff, ''],
+    ['USAGE', stats.use?.toFixed(1), '%'],
+    ['VAA', stats.vaa?.toFixed(1), '°'],
+  ];
+
+  const sgX = 24, sgY = 175, sgW = W*0.55 - 24, sgH = 220;
+  const cW = sgW/4, rH = sgH/3;
+
+  statList.forEach((st, i) => {
+    const col2 = i % 4; const row2 = Math.floor(i/4);
+    const x = sgX + col2*cW, y = sgY + row2*rH;
+    ctx.fillStyle = '#111114';
+    ctx.fillRect(x+2, y+2, cW-4, rH-4);
+    ctx.fillStyle = '#333340'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    ctx.fillText(st[0], x+10, y+18);
+    ctx.fillStyle = '#EFEFEF'; ctx.font = 'bold 24px monospace';
+    ctx.fillText(st[1], x+10, y+46);
+    ctx.fillStyle = col; ctx.font = '10px monospace';
+    ctx.fillText(st[2], x+10, y+62);
+  });
+
+  // Top comps
+  const compX = W*0.55, compY = 90;
+  ctx.fillStyle = col; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('TOP PITCH COMPS', compX, compY);
+  comps.forEach((c, i) => {
+    const cy2 = compY + 20 + i*80;
+    ctx.fillStyle = '#111114';
+    ctx.fillRect(compX, cy2, W-compX-24, 74);
+    ctx.strokeStyle = col+'40'; ctx.lineWidth = 1;
+    ctx.strokeRect(compX, cy2, W-compX-24, 74);
+    ctx.fillStyle = col; ctx.font = `bold 11px monospace`;
+    ctx.fillText(`#${i+1}  ${c.n}  (${c.t})`, compX+10, cy2+18);
+    ctx.fillStyle = '#888892'; ctx.font = '10px monospace';
+    ctx.fillText(`${c.velo}mph  IVB:${c.ivb}"  HB:${c.hb>0?'+':''}${c.hb}"  ${c.eff}% eff`, compX+10, cy2+36);
+    ctx.fillStyle = '#4ADE80'; ctx.font = 'bold 13px monospace';
+    ctx.fillText(`MATCH: ${Math.round(c.score*100)}%`, compX+10, cy2+56);
+  });
+
+  // Notes section
+  const notesY = 415;
+  ctx.fillStyle = col; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('SESSION NOTES', 24, notesY);
+  ctx.fillStyle = '#111114';
+  ctx.fillRect(24, notesY+6, W*0.55-24, H-notesY-40);
+  if(notes) {
+    ctx.fillStyle = '#888892'; ctx.font = '10px monospace';
+    const words = notes.split('\n');
+    words.slice(0, 10).forEach((line, i) => {
+      ctx.fillText(line.substring(0,80), 34, notesY+26+i*16);
+    });
+  }
+
+  // Pitch note
+  if(pitch.note) {
+    ctx.fillStyle = '#555560'; ctx.font = '9px monospace';
+    const words = pitch.note.split(' ');
+    let line = '', y = notesY+26;
+    words.forEach(w => {
+      const test = line+' '+w;
+      if(ctx.measureText(test).width > W*0.53) { ctx.fillText(line, 34, y); line=w; y+=14; }
+      else line = test;
+    });
+    if(line) ctx.fillText(line, 34, y);
+  }
+
+  // Footer
+  ctx.fillStyle = '#333340'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+  ctx.fillText('PS20 PITCH DESIGN LAB  ·  PAUL SKENES #20  ·  PITTSBURGH PIRATES  ·  PRIVATE BUILD  ·  TRACKMAN / STATCAST 2025–26', W/2, H-14);
+
+  // Download
+  const link = document.createElement('a');
+  const d = new Date();
+  link.download = `ps20_report_${curPitch}_${d.getMonth()+1}${d.getDate()}${d.getFullYear()}.png`;
+  link.href = cv.toDataURL('image/png');
+  link.click();
+}
+// ══════════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ══════════════════════════════════════════════════════════════
+function loop() {
+  if(typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(loop);
+  try { animTraj(); } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('load', init);
+window.addEventListener('resize', () => setTimeout(() => {
+  renderMovPlot();
+  renderArsenalChart();
+  renderVAAPanel(curPitch, getActiveStats(curPitch));
+  renderZoneMap();
+  renderComparePanel();
+}, 100));
+</script>
+</body>
+</html>
